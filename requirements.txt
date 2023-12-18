@@ -1,0 +1,2 @@
+remember to add requirements for windows, mac
+let git ignore venv folder
