@@ -7,11 +7,11 @@ class GameMap:
     def __init__(self, width: int, height: int) -> None:
         self.width, self.height = width, height
 
-        #creates 2D array, fill with floor
-        self.tiles = np.full((width, height), fill_value=tile_types.floor, order="F")
-
-        #creates wall at specific location
-        self.tiles[30:33, 22] = tile_types.wall
+        #creates 2D array, fill with wall
+        self.tiles = np.full((width, height), fill_value=tile_types.wall, order="F")
+        
+        # #creates wall at specific location
+        # self.tiles[30:33, 22] = tile_types.wall
 
     def in_bounds(self, x: int, y: int) -> bool:
         '''Sepcification: returns True if x, y are in boundaries'''
