@@ -1,0 +1,137 @@
+from __future__ import annotations
+
+import random
+from typing import Iterator, Tuple, List, TYPE_CHECKING
+
+import tcod
+
+from game_map import GameMap
+import tile_types
+
+if TYPE_CHECKING:
+    from entity import Entity
+
+class RectangularRoom: 
+
+    def __init__(self, x: int, y: int, width: int, height: int) -> None:
+        #top left corner, wall
+        self.x1 = x
+        self.y1 = y
+
+        #bottom right corner, wall
+        self.x2 = x + width
+        self.y2 = y + height
+
+    @property
+    def center(self) -> Tuple[int, int]:
+        center_x = int((self.x1 + self.x2) / 2)
+        center_y = int((self.y1 + self.y2) / 2)
+
+        return (center_x, center_y)
+    
+    @property
+    def inner(self) -> Tuple[slice, slice]:
+        '''returns inner area of the room as a 2D array index'''
+        return (slice(self.x1 + 1, self.x2), slice(self.y1 + 1, self.y2))
+    
+    def intersects(self, other: RectangularRoom) -> bool:
+        '''Returns True if this room overlaps with another rectangular room'''
+        return (
+            self.x1 <= other.x2
+            and self.x2 >= other.x1
+            and self.y1 <= self.y2
+            and self.y2 >= self.y1
+        )
+
+def tunnel_between(
+    start: Tuple[int, int], end: Tuple[int, int]
+) -> Iterator[Tuple[int, int]]:
+    '''Return an L-shaped tunnel between two points'''
+
+    x1, y1 = start
+    x2, y2 = end
+
+    if random.random() < 0.5:   # 50% chance
+        #move horizontally, then vertically
+        corner_x, corner_y = x2, y1
+    else: 
+        #move vertically then horizontally
+        corner_x, corner_y = x1, y2
+
+    #generate the coords for the tunnel through Bresenham algo
+    for x, y in tcod.los.bresenham((x1, y1), (corner_x, corner_y)).tolist():
+        yield x, y
+
+    for x, y in tcod.los.bresenham((corner_x, corner_y), (x2, y2)).tolist():
+        yield x, y
+
+
+def generate_dungeon(
+    max_rooms: int,
+    room_min_size: int,
+    room_max_size: int,
+    map_width: int,
+    map_height: int,
+    player: Entity,
+) -> GameMap:
+    '''Generates a new dungeon map'''
+
+    #full wall dungeon
+    dungeon = GameMap(map_width, map_height)
+
+    rooms: List[RectangularRoom] = []
+
+    #max_room tries for new rooms
+    for r in range(max_rooms):
+
+        #new room inits
+        room_width = random.randint(room_min_size, room_max_size)
+        room_height = random.randint(room_min_size, room_max_size)
+
+        x = random.randint(0, dungeon.width - room_width - 1)
+        y = random.randint(0, dungeon.height - room_height - 1)
+
+        new_room = RectangularRoom(x, y, room_width, room_height)
+
+        #run through the other rooms and see if they intersect with this one
+        if any(new_room.intersects(other_room) for other_room in rooms):
+            continue  #intersects, so onto the next attempt
+        #if there are no intersections, then room is valid
+
+        #dig out the room's inner area
+        dungeon.tiles[new_room.inner] = tile_types.floor
+
+        if len(rooms) == 0: 
+            #the first room, where player starts
+            player.x, player.y = new_room.center
+        else: #all rooms after the first
+            #dig a tunnel between this and the previous one
+            for x, y in tunnel_between(rooms[-1].center, new_room.center):
+                dungeon.tiles[x, y] = tile_types.floor
+        
+        #append the new room to the rooms list
+        rooms.append(new_room)
+
+    return dungeon
+
+
+
+
+
+# def generate_dungeon(map_width, map_height) -> GameMap:
+
+#     #create a full wall dungeon
+#     dungeon = GameMap(map_width, map_height)
+
+#     room_1 = RectangularRoom(x=20, y=15, width=10, height=15)
+#     room_2 = RectangularRoom(x=35, y=15, width=10, height=15)
+
+#     #carves out dungeon with inner
+#     dungeon.tiles[room_1.inner] = tile_types.floor
+#     dungeon.tiles[room_2.inner] = tile_types.floor
+
+#     #carves out the tunnel between the two rooms
+#     for x, y in tunnel_between(room_2.center, room_1.center):
+#         dungeon.tiles[x, y] = tile_types.floor
+
+#     return dungeon
