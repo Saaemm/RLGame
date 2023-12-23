@@ -10,8 +10,7 @@ from input_handlers import EventHandler
 
 #drawing map, entities, handles player input
 class Engine:
-    def __init__(self, entities: Set[Entity], event_handler: EventHandler, game_map: GameMap, player: Entity) -> None:
-        self.entities = entities
+    def __init__(self, event_handler: EventHandler, game_map: GameMap, player: Entity) -> None:
         self.event_handler = event_handler
         self.game_map = game_map
         self.player = player
@@ -47,12 +46,6 @@ class Engine:
 
         #updates map
         self.game_map.render(console)
-
-        #renders all entities on screen
-        for entity in self.entities:
-            #only print entities in FOV
-            if self.game_map.visible[entity.x, entity.y]:
-                console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.color)
 
         #update and clear/get rid of leftovers step
         context.present(console)

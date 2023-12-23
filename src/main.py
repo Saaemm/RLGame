@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
+import copy
+
 import tcod
 
 from engine import Engine
-from entity import Entity
+import entity_factories
 from procgen import generate_dungeon
 from input_handlers import EventHandler
 
@@ -22,15 +24,15 @@ def main():
     room_min_size = 6
     max_rooms = 30
 
+    max_monsters_per_room = 2
+
     #32x8 tilesheet using font, returns Tileset
     tileset = tcod.tileset.load_tilesheet(
         "assets/terminal10x10_gs_tc.png", 32, 8, tcod.tileset.CHARMAP_TCOD
     )
 
-    #entity set inits
-    player = Entity(int(screen_width/2), int(screen_height/2), "@", (255, 255, 255))
-    npc1 = Entity(int(screen_width/2 - 5), int(screen_height/2), "%", (255, 255, 0))
-    entities = {npc1, player}
+    #player init (cannot use spawn by needing gamemap which is created later on)
+    player = copy.deepcopy(entity_factories.player)
 
     #for player inputs (events)
     event_handler = EventHandler()
@@ -42,11 +44,12 @@ def main():
         room_max_size=room_max_size,
         map_width=map_width, 
         map_height=map_height,
+        max_monsters_per_room=max_monsters_per_room,
         player=player
     )
 
     #engine init
-    engine = Engine(entities=entities, event_handler=event_handler, game_map=game_map, player=player)
+    engine = Engine(event_handler=event_handler, game_map=game_map, player=player)
 
     #creates screen, can change configurations for title, vsync, windowflags, renderer
     with tcod.context.new_terminal(
