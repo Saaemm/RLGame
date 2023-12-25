@@ -19,14 +19,44 @@ class Action:
 class EscapeAction(Action):
     def perform(self, engine: Engine, entity: Entity) -> None:
         raise SystemExit()
-
-class MovementAction(Action):
-    def __init__(self, dx: int, dy: int):
+    
+class ActionWithDirection(Action):
+    def __init__(self, dx: int, dy: int) -> None:
         super().__init__()
 
         self.dx = dx
         self.dy = dy
 
+    def perform(self, engine: Engine, entity: Entity) -> None:
+        raise NotImplementedError()
+    
+
+class MeleeAction(ActionWithDirection):
+    def perform(self, engine: Engine, entity: Entity) -> None:
+        dest_x = entity.x + self.dx
+        dest_y = entity.y + self.dy
+        #gets target at destination location
+        target = engine.game_map.get_blocking_entity_at_location(dest_x, dest_y)
+
+        if not target:
+            return  #No entity to attack
+        
+        print(f"You kicked {target.name}, much to its chagrin!")
+
+
+class BumpAction(ActionWithDirection):
+    def perform(self, engine: Engine, entity: Entity) -> None:
+        dest_x = entity.x + self.dx
+        dest_y = entity.y + self.dy
+        if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+            return MeleeAction(self.dx, self.dy).perform(engine, entity)
+        
+        else:
+            return MovementAction(self.dx, self.dy).perform(engine, entity)
+        
+
+
+class MovementAction(ActionWithDirection):
     def perform(self, engine: Engine, entity: Entity) -> None:
         dest_x = entity.x + self.dx
         dest_y = entity.y + self.dy
@@ -36,5 +66,7 @@ class MovementAction(Action):
         if not engine.game_map.tiles["walkable"][dest_x, dest_y]:
             #note: currently requires that dx, dy at most 1
             return #destination blocked by wall/other tile
+        if engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+            return  #Estination is blocked by an entity
         
         entity.move(self.dx, self.dy)
