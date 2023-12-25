@@ -8,11 +8,13 @@ from tcod.console import Console
 import tile_types
 
 if TYPE_CHECKING:
+    from engine import Engine
     from entity import Entity
 
 class GameMap:
-    def __init__(self, width: int, height: int, entities: Iterable[Entity] = ()) -> None:
+    def __init__(self, engine: Engine, width: int, height: int, entities: Iterable[Entity] = ()) -> None:
 
+        self.engine = engine
         self.width, self.height = width, height
 
         #creates 2D array, fill with wall
@@ -28,7 +30,11 @@ class GameMap:
 
     def get_blocking_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
         for entity in self.entities:
-            if entity.x == location_x and entity.y == location_y and entity.blocks_movement:
+            if (
+                entity.x == location_x 
+                and entity.y == location_y 
+                and entity.blocks_movement
+            ):
                 return entity
             
         return None
@@ -44,10 +50,10 @@ class GameMap:
         If a it isn't, and it is in the "explored" array, then draw it with "dark" colors
         Otherwise, default is "SHROUD" colors
         '''
-        console.rgb[0:self.width, 0:self.height] = np.select(
+        console.rgb[0 : self.width, 0 : self.height] = np.select(
             condlist=[self.visible, self.explored],
             choicelist=[self.tiles["light"], self.tiles["dark"]],
-            default=tile_types.SHROUD
+            default=tile_types.SHROUD,
         )
 
         #renders all entities on screen

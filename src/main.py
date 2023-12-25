@@ -34,22 +34,20 @@ def main():
     #player init (cannot use spawn by needing gamemap which is created later on)
     player = copy.deepcopy(entity_factories.player)
 
-    #for player inputs (events)
-    event_handler = EventHandler()
+    #engine init
+    engine = Engine(player=player)
 
     #gamemap inits
-    game_map = generate_dungeon(
+    engine.game_map = generate_dungeon(
         max_rooms=max_rooms,
         room_min_size=room_min_size,
         room_max_size=room_max_size,
         map_width=map_width, 
         map_height=map_height,
         max_monsters_per_room=max_monsters_per_room,
-        player=player
+        engine=engine
     )
-
-    #engine init
-    engine = Engine(event_handler=event_handler, game_map=game_map, player=player)
+    engine.update_fov()
 
     #creates screen, can change configurations for title, vsync, windowflags, renderer
     with tcod.context.new_terminal(
@@ -70,8 +68,7 @@ def main():
             engine.render(console=root_console, context=context)
 
             #gets user inputs and changes states accordingly
-            events = tcod.event.wait()
-            engine.handle_events(events)
+            engine.event_handler.handle_events()
 
 
 if __name__ == "__main__":
