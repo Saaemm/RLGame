@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import copy
-from typing import Tuple, TypeVar, TYPE_CHECKING
+from typing import Optional, Tuple, TypeVar, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game_map import GameMap
@@ -10,10 +10,14 @@ T = TypeVar("T", bound="Entity")
 
 class Entity:
     '''
-    Generic object to represetn players, enemies, items
+    Generic object to represent players, enemies, items
     '''
+
+    gamemap: GameMap
+
     def __init__(
         self, 
+        gamemap: Optional[GameMap] = None,
         x: int = 0, 
         y: int = 0, 
         char: str = "?", 
@@ -29,13 +33,29 @@ class Entity:
         self.name = name
         self.blocks_movement = blocks_movement
 
+        if gamemap is not None:
+            #if gamemap isn't provided now then it will be set later
+            self.gamemap = gamemap
+            gamemap.entities.add(self)
+
     def spawn(self: T, gamemap: GameMap, x: int, y: int) -> T:
         '''Spawns a copy of this instance at the given location; note deepcopy to avoid alias'''
         clone = copy.deepcopy(self)
         clone.x = x
         clone.y = y
+        clone.gamemape = gamemap
         gamemap.entities.add(clone)
         return clone
+    
+    def place(self, x: int, y: int, gamemap: Optional[GameMap] = None) -> None:
+        '''Place this entity at a new location. Handles moving across GameMaps'''
+        self.x = x
+        self.y = y
+        if gamemap is not None:
+            if hasattr(self, "gamemap"): # Possibly uninitialized
+                self.gamemap.entities.remove(self)
+            self.gamemap = gamemap
+            gamemap.entities.add(self)
 
     def move(self, dx: int, dy: int) -> None:
         #moves the entity

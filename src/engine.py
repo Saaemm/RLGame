@@ -10,9 +10,8 @@ from input_handlers import EventHandler
 
 #drawing map, entities, handles player input
 class Engine:
-    def __init__(self, event_handler: EventHandler, game_map: GameMap, player: Entity) -> None:
-        self.event_handler = event_handler
-        self.game_map = game_map
+    def __init__(self, player: Entity) -> None:
+        self.event_handler: EventHandler = EventHandler(self)
         self.player = player
 
         self.update_fov()
@@ -20,22 +19,6 @@ class Engine:
     def handle_enemy_turns(self) -> None:
         for entity in self.game_map.entities - {self.player}:
             print(f'The {entity.name} wonders when it will take its turn')
-
-    def handle_events(self, events: Iterable[Any]) -> None:
-
-        #gets list of user input events and iterates over them
-        for event in events:
-
-            #action becomes whatever is returned by the user keypress's function, ie keydown if valid
-            action = self.event_handler.dispatch(event)
-
-            if action is None:
-                continue
-
-            action.perform(engine=self, entity=self.player)
-            self.handle_enemy_turns()  #handles enemies after each player event
-
-            self.update_fov()  #updates the FOV before player's next action
 
     def update_fov(self) -> None:
         '''Recompute the visible area based on the player's POV'''

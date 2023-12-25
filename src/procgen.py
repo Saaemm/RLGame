@@ -10,7 +10,7 @@ from game_map import GameMap
 import tile_types
 
 if TYPE_CHECKING:
-    from entity import Entity
+    from engine import Engine
 
 class RectangularRoom: 
 
@@ -55,7 +55,7 @@ def place_entities(
         y = random.randint(room.y1 + 1, room.y2 - 1)
 
         if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
-            
+
             if random.random() < 0.8: 
                 #spawns orc
                 entity_factories.orc.spawn(dungeon, x, y)
@@ -93,11 +93,12 @@ def generate_dungeon(
     map_width: int,
     map_height: int,
     max_monsters_per_room: int,
-    player: Entity,
+    engine: Engine
 ) -> GameMap:
     '''Generates a new dungeon map'''
 
     #full wall dungeon
+    player = engine.player
     dungeon = GameMap(map_width, map_height, entities=[player])
 
     #temp structure to keep track of rooms already added for no overlap and other features
@@ -125,7 +126,7 @@ def generate_dungeon(
 
         if len(rooms) == 0: 
             #the first room, where player starts
-            player.x, player.y = new_room.center
+            player.place(*new_room.center, dungeon)
         else: #all rooms after the first
             #dig a tunnel between this and the previous one
             for x, y in tunnel_between(rooms[-1].center, new_room.center):
