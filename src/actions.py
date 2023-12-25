@@ -33,6 +33,9 @@ class EscapeAction(Action):
     def perform(self) -> None:
         raise SystemExit()
     
+class WaitAction(Action):
+    def perform(self) -> None:
+        pass
 
 class ActionWithDirection(Action):
     def __init__(self, entity: Entity, dx: int, dy: int) -> None:
@@ -62,7 +65,7 @@ class MeleeAction(ActionWithDirection):
         if not target:
             return  #No entity to attack, for safety
         
-        print(f"You kicked {target.name}, much to its chagrin!")
+        print(f"{self.entity.name} kicked {target.name}, much to its chagrin!")
 
 class MovementAction(ActionWithDirection):
     def perform(self) -> None:

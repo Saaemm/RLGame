@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
 import tcod.event
+import player_config as config
 from tcod.event import KeyDown, Quit
-from actions import Action, EscapeAction, BumpAction
+from actions import Action, EscapeAction, BumpAction, WaitAction
 
 if TYPE_CHECKING:
     from engine import Engine
@@ -25,7 +26,7 @@ class EventHandler(tcod.event.EventDispatch[Action]):
                 continue
 
             action.perform()
-            self.engine.handle_enemy_turns()  #handles enemies after each player event
+            self.engine.handle_enemy_turns()  #handles enemies after each *player event*, not tick/other time method
 
             self.engine.update_fov()  #updates the FOV before player's next action
 
@@ -42,16 +43,14 @@ class EventHandler(tcod.event.EventDispatch[Action]):
 
         player = self.engine.player
 
-        if key == tcod.event.KeySym.UP:
-            action = BumpAction(player, dx=0, dy=-1)
-        elif key == tcod.event.KeySym.DOWN:
-            action = BumpAction(player, dx=0, dy=1)
-        elif key == tcod.event.KeySym.LEFT:
-            action = BumpAction(player, dx=-1, dy=0)
-        elif key == tcod.event.KeySym.RIGHT:
-            action = BumpAction(player, dx=1, dy=0)
+        if key in config.MOVE_KEYS:
+            dx, dy = config.MOVE_KEYS[key]
+            action = BumpAction(player, dx, dy)
 
-        elif key == tcod.event.KeySym.ESCAPE:
+        elif key in config.WAIT_KEYS:
+            action = WaitAction(player)
+
+        elif key in config.ESCAPE_KEYS:
             action = EscapeAction(player)
 
         return action

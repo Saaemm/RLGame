@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 #drawing map, entities, handles player input
 class Engine:
 
-    #inited in main
+    #inited in main as a static/class variable
     game_map: GameMap
 
     def __init__(self, player: Entity) -> None:
@@ -23,8 +23,11 @@ class Engine:
         self.player = player
 
     def handle_enemy_turns(self) -> None:
-        for entity in self.game_map.entities - {self.player}:
-            print(f'The {entity.name} wonders when it will take its turn')
+
+        #self.game_map.actors gets a generator of actors in map
+        for entity in set(self.game_map.actors) - {self.player}:
+            if entity.ai is not None: #if it has an AI, then perform it
+                entity.ai.perform()
 
     def update_fov(self) -> None:
         '''Recompute the visible area based on the player's POV'''

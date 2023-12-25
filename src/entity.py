@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import copy
-from typing import Optional, Tuple, TypeVar, TYPE_CHECKING
+from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from components.ai import BaseAI
+    from components.fighter import Fighter
     from game_map import GameMap
 
 T = TypeVar("T", bound="Entity")
@@ -23,7 +25,7 @@ class Entity:
         char: str = "?", 
         color: Tuple[int, int, int] = (255, 255, 255),
         name: str = "<Unnamed>",
-        blocks_movement: bool = False,
+        blocks_movement: bool = False,  # entity can be moved or not; consumables, equiptment = False; enemies = True
     ) -> None:
         
         self.x = x
@@ -51,6 +53,8 @@ class Entity:
         '''Place this entity at a new location. Handles moving across GameMaps'''
         self.x = x
         self.y = y
+
+        #Gamemap is none means stays in current map
         if gamemap is not None:
             if hasattr(self, "gamemap"): # Possibly uninitialized
                 self.gamemap.entities.remove(self)
@@ -61,3 +65,36 @@ class Entity:
         #moves the entity
         self.x += dx
         self.y += dy
+
+class Actor(Entity):
+    def __init__(
+            self, 
+            *,
+            gamemap: GameMap | None = None, 
+            x: int = 0, 
+            y: int = 0, 
+            char: str = "?", 
+            color: Tuple[int, int, int] = (255, 255, 255), 
+            name: str = "<Unnamed>", 
+            ai_cls: Type[BaseAI],
+            fighter: Fighter
+    ) -> None:
+        super().__init__(
+            gamemap=gamemap, 
+            x=x, 
+            y=y, 
+            char=char, 
+            color=color, 
+            name=name, 
+            blocks_movement=True,
+        )
+
+        self.ai: Optional[BaseAI] = ai_cls(self)
+
+        self.fighter = fighter
+        self.fighter.entity = self
+
+    @property
+    def is_alive(self) -> bool: 
+        '''Returns True as long as this actor can perform actions'''
+        return bool(self.ai)
