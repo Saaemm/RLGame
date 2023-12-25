@@ -68,7 +68,7 @@ def main():
             engine.render(console=root_console, context=context)
 
             #gets user inputs and changes states accordingly
-            engine.event_handler.handle_events
+            engine.event_handler.handle_events()
 
 
 if __name__ == "__main__":

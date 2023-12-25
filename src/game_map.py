@@ -30,7 +30,8 @@ class GameMap:
 
     def get_blocking_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
         for entity in self.entities:
-            if (entity.x == location_x 
+            if (
+                entity.x == location_x 
                 and entity.y == location_y 
                 and entity.blocks_movement
             ):

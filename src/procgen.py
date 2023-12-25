@@ -99,7 +99,7 @@ def generate_dungeon(
 
     #full wall dungeon
     player = engine.player
-    dungeon = GameMap(map_width, map_height, entities=[player])
+    dungeon = GameMap(engine, map_width, map_height, entities=[player])
 
     #temp structure to keep track of rooms already added for no overlap and other features
     rooms: List[RectangularRoom] = []
