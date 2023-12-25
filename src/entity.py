@@ -66,6 +66,7 @@ class Entity:
         self.x += dx
         self.y += dy
 
+
 class Actor(Entity):
     def __init__(
             self, 
