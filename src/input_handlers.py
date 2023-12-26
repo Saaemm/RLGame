@@ -16,6 +16,18 @@ class EventHandler(tcod.event.EventDispatch[Action]):
         self.engine = engine
 
     def handle_events(self) -> None:
+        raise NotImplementedError()
+    
+    #Quit event, ie pressing the X button
+    def ev_quit(self, event: Quit) -> Action | None:    #same thing as -> Optional[Action]
+        raise SystemExit()
+    
+
+class MainGameEventHandler(EventHandler):
+
+    #Main game, while player is alive 
+
+    def handle_events(self) -> None:
         #gets list of user input events and iterates over them
         for event in tcod.event.wait():
 
@@ -29,11 +41,6 @@ class EventHandler(tcod.event.EventDispatch[Action]):
             self.engine.handle_enemy_turns()  #handles enemies after each *player event*, not tick/other time method
 
             self.engine.update_fov()  #updates the FOV before player's next action
-
-
-    #Quit event, ie pressing the X button
-    def ev_quit(self, event: Quit) -> Action | None:    #same thing as -> Optional[Action]
-        raise SystemExit()
     
     #receives key press events and returns either Action or None
     def ev_keydown(self, event: KeyDown) -> Action | None:
@@ -53,4 +60,30 @@ class EventHandler(tcod.event.EventDispatch[Action]):
         elif key in config.ESCAPE_KEYS:
             action = EscapeAction(player)
 
+        return action
+    
+
+class GameOverEventHandler(EventHandler):
+    def handle_events(self) -> None:
+        for event in tcod.event.wait():
+            #action becomes whatever is returned by the user keypress's function, ie keydown if valid
+            action = self.dispatch(event)
+
+            if action is None:
+                continue
+
+            action.perform()
+
+            #Just without handling enemies, or updating FOV
+
+    def ev_keydown(self, event: KeyDown) -> Action | None:
+        action: Optional[Action] = None
+        
+        key = event.sym
+        player = self.engine.player
+
+        #Can only escape
+        if key in config.ESCAPE_KEYS:
+            action = EscapeAction(player)
+        
         return action
