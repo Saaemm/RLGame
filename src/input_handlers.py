@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
 import tcod.event
-import player_config as config
+import configs.player_config as config
 from tcod.event import KeyDown, Quit
 from actions import Action, EscapeAction, BumpAction, WaitAction
 
