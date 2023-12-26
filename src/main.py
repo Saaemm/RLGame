@@ -3,6 +3,7 @@ import copy
 
 import tcod
 
+import configs.color as color
 from engine import Engine
 import entity_factories
 from procgen import generate_dungeon
@@ -18,7 +19,7 @@ def main():
 
     #map vars
     map_width = 80
-    map_height = 45
+    map_height = 43
 
     room_max_size = 10
     room_min_size = 6
@@ -48,6 +49,10 @@ def main():
         engine=engine
     )
     engine.update_fov()
+
+    engine.message_log.add_message(
+        "Hello fellow human, and welcome to [generic roguelike game]!", color.welcome_text
+    )
 
     #creates screen, can change configurations for title, vsync, windowflags, renderer
     with tcod.context.new_terminal(
