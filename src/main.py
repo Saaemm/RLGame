@@ -70,10 +70,13 @@ def main():
         #game loop, ends when screen closes
         while True:
 
-            engine.render(console=root_console, context=context)
+            #updates and clears and renders
+            root_console.clear()
+            engine.event_handler.on_render(console=root_console)
+            context.present(root_console)
 
             #gets user inputs and changes states accordingly
-            engine.event_handler.handle_events()
+            engine.event_handler.handle_events(context)
 
 
 if __name__ == "__main__":

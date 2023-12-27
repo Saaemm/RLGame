@@ -2,13 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from tcod.context import Context
 from tcod.console import Console
 from tcod.map import compute_fov
 
 from input_handlers import MainGameEventHandler
 from interface.message_log import MessageLog
-from interface.render_functions import render_bar
+from interface.render_functions import render_bar, render_names_at_mouse_location
 
 if TYPE_CHECKING:
     from entity import Actor
@@ -24,6 +23,7 @@ class Engine:
     def __init__(self, player: Actor) -> None:
         self.event_handler: EventHandler = MainGameEventHandler(self)
         self.message_log = MessageLog()
+        self.mouse_location = (0, 0)
         self.player = player
 
     def handle_enemy_turns(self) -> None:
@@ -43,7 +43,7 @@ class Engine:
         #update "explored" to include "visible"
         self.game_map.explored |= self.game_map.visible
             
-    def render(self, console: Console, context: Context) -> None:
+    def render(self, console: Console) -> None:
 
         #updates map
         self.game_map.render(console)
@@ -59,6 +59,9 @@ class Engine:
             total_width=20,
         )
 
+        #prints mouse hovering info
+        render_names_at_mouse_location(console=console, x=21, y=44, engine=self)
+
         #prints game over if needed, can be folded into another function
         if not self.player.is_alive:
             console.print(
@@ -66,7 +69,3 @@ class Engine:
                 y=25,
                 string="GAME OVER"
             )
-
-        #update and clear/get rid of leftovers
-        context.present(console)
-        console.clear()
