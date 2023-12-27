@@ -41,3 +41,12 @@ WAIT_KEYS = {
 ESCAPE_KEYS = {
     tcod.event.KeySym.ESCAPE,
 }
+
+#for history viewer input/render state
+CURSOR_Y_KEYS = {
+    tcod.event.KeySym.UP: -1,
+    tcod.event.KeySym.DOWN: 1,
+    tcod.event.KeySym.PAGEUP: -10,
+    tcod.event.KeySym.PAGEDOWN: 10,
+
+}
