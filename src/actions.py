@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional, Tuple, TYPE_CHECKING
 
 import configs.color as color
+import exceptions
 
 #prevent circular imports with engine in main
 if TYPE_CHECKING:
@@ -70,7 +71,7 @@ class MeleeAction(ActionWithDirection):
         target = self.target_actor
 
         if not target:
-            return  #No entity to attack, for safety
+            raise exceptions.Impossible("Nothing to attack.")  #No entity to attack, for safety
         
         damage = self.entity.fighter.power - target.fighter.defense
 
@@ -81,7 +82,7 @@ class MeleeAction(ActionWithDirection):
             attack_color = color.enemy_atk
 
         attack_desc = f"{self.entity.name.capitalize()} attacks {target.name}"
-        
+
         if damage > 0:
             self.engine.message_log.add_message(
                 f"{attack_desc} for {damage} hit points.", attack_color
@@ -98,12 +99,15 @@ class MovementAction(ActionWithDirection):
         dest_x, dest_y = self.dest_xy
 
         if not self.engine.game_map.in_bounds(dest_x, dest_y):
-            return #destination not in bounds
+            #destination not in bounds
+            raise exceptions.Impossible("The destination is blocked.")
         if not self.engine.game_map.tiles["walkable"][dest_x, dest_y]:
             #note: currently requires that dx, dy at most 1
-            return #destination blocked by wall/other tile
+            #destination blocked by wall/other tile
+            raise exceptions.Impossible("The destination is blocked.")
         if self.engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
-            return  #destination is blocked by an entity
+            #destination is blocked by an entity
+            raise exceptions.Impossible("The destination is blocked.")
         
         self.entity.move(self.dx, self.dy)
 

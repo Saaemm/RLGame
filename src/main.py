@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import copy
+import traceback
 
 import tcod
 
@@ -75,8 +76,17 @@ def main():
             engine.event_handler.on_render(console=root_console)
             context.present(root_console)
 
-            #gets user inputs and changes states accordingly
-            engine.event_handler.handle_events(context)
+            #Handles events and errors
+            try:
+                for event in tcod.event.wait():
+                    #mouse position information
+                    context.convert_event(event)
+                    #gets user inputs and changes states accordingly
+                    engine.event_handler.handle_events(event)
+            except Exception:  #Handles exceptions
+                traceback.print_exc()  #Print error to stderr
+                #prints error to message log
+                engine.message_log.add_message(traceback.format_exc(), color.error)
 
 
 if __name__ == "__main__":
