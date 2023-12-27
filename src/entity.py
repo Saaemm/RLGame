@@ -17,11 +17,11 @@ class Entity:
     Generic object to represent players, enemies, items
     '''
 
-    gamemap: GameMap
+    parent: GameMap
 
     def __init__(
         self, 
-        gamemap: Optional[GameMap] = None,
+        parent: Optional[GameMap] = None,
         x: int = 0, 
         y: int = 0, 
         char: str = "?", 
@@ -39,17 +39,21 @@ class Entity:
         self.blocks_movement = blocks_movement
         self.render_order = render_order
 
-        if gamemap is not None:
+        if parent is not None:
             #if gamemap isn't provided now then it will be set later
-            self.gamemap = gamemap
-            gamemap.entities.add(self)
+            self.parent = parent
+            parent.entities.add(self)
+
+    @property
+    def gamemap(self) -> GameMap:
+        return self.parent.gamemap
 
     def spawn(self: T, gamemap: GameMap, x: int, y: int) -> T:
         '''Spawns a copy of this instance at the given location; note deepcopy to avoid alias'''
         clone = copy.deepcopy(self)
         clone.x = x
         clone.y = y
-        clone.gamemap = gamemap
+        clone.parent = gamemap
         gamemap.entities.add(clone)
         return clone
     
@@ -60,9 +64,10 @@ class Entity:
 
         #Gamemap is none means stays in current map
         if gamemap is not None:
-            if hasattr(self, "gamemap"): # Possibly uninitialized
-                self.gamemap.entities.remove(self)
-            self.gamemap = gamemap
+            if hasattr(self, "parent"): # Possibly uninitialized
+                if self.parent is self.gamemap:
+                    self.parent.entities.remove(self)
+            self.parent = gamemap
             gamemap.entities.add(self)
 
     def move(self, dx: int, dy: int) -> None:
@@ -75,7 +80,7 @@ class Actor(Entity):
     def __init__(
             self, 
             *,
-            gamemap: GameMap | None = None, 
+            parent: GameMap | None = None, 
             x: int = 0, 
             y: int = 0, 
             char: str = "?", 
@@ -85,7 +90,7 @@ class Actor(Entity):
             fighter: Fighter
     ) -> None:
         super().__init__(
-            gamemap=gamemap, 
+            parent=parent, 
             x=x, 
             y=y, 
             char=char, 
@@ -98,7 +103,7 @@ class Actor(Entity):
         self.ai: Optional[BaseAI] = ai_cls(self)
 
         self.fighter = fighter
-        self.fighter.entity = self
+        self.fighter.parent = self
 
     @property
     def is_alive(self) -> bool: 
