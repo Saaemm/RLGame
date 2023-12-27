@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from tcod.console import Console
 from tcod.map import compute_fov
 
+import exceptions
 from input_handlers import MainGameEventHandler
 from interface.message_log import MessageLog
 from interface.render_functions import render_bar, render_names_at_mouse_location
@@ -31,7 +32,10 @@ class Engine:
         #self.game_map.actors gets a generator of actors in map
         for entity in set(self.game_map.actors) - {self.player}:
             if entity.ai is not None: #if it has an AI, then perform it
-                entity.ai.perform()
+                try:
+                    entity.ai.perform()
+                except exceptions.Impossible:
+                    pass  # Ignore impossible action esxceptions from AI for now
 
     def update_fov(self) -> None:
         '''Recompute the visible area based on the player's POV'''
@@ -61,11 +65,3 @@ class Engine:
 
         #prints mouse hovering info
         render_names_at_mouse_location(console=console, x=21, y=44, engine=self)
-
-        #prints game over if needed, can be folded into another function
-        if not self.player.is_alive:
-            console.print(
-                x=25,
-                y=25,
-                string="GAME OVER"
-            )
