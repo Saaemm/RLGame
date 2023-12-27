@@ -29,6 +29,9 @@ class GameMap:
         self.visible = np.full((width, height), fill_value=False, order="F")  #Tiles the player sees currently
         self.explored = np.full((width, height), fill_value=False, order="F")  #Tiles the player has seen before
 
+    @property
+    def gamemap(self) -> GameMap:
+        return self
 
     @property
     def actors(self) -> Iterator[Actor]:
