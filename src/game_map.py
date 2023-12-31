@@ -87,12 +87,12 @@ class GameMap:
             default=tile_types.SHROUD,
         )
 
-        entities_sorted_for_rednering = sorted(
+        entities_sorted_for_rendering = sorted(
             self.entities, key=lambda x: x.render_order.value
         )
 
         #renders all entities on screen
-        for entity in entities_sorted_for_rednering:
+        for entity in entities_sorted_for_rendering:
             #only print entities in FOV
             if self.visible[entity.x, entity.y]:
                 console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.color)

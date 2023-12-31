@@ -38,6 +38,12 @@ WAIT_KEYS = {
     tcod.event.KeySym.CLEAR,
 }
 
+CONFIRM_KEYS = {
+    tcod.event.KeySym.RETURN,
+    tcod.event.KeySym.KP_ENTER,
+    tcod.event.KeySym.RETURN2,
+}
+
 ESCAPE_KEYS = {
     tcod.event.KeySym.ESCAPE,
 }

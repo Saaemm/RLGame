@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import math
 from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union
 
 from configs.render_order import RenderOrder
@@ -58,6 +59,12 @@ class Entity:
         clone.parent = gamemap
         gamemap.entities.add(clone)
         return clone
+    
+    def distance(self, x: int, y: int) -> float:
+        '''
+        Returns distance between current entity and (x, y) position
+        '''
+        return math.sqrt((self.x - x) ** 2 + (self.y - y) ** 2)
     
     def place(self, x: int, y: int, gamemap: Optional[GameMap] = None) -> None:
         '''Place this entity at a new location. Handles moving across GameMaps'''
