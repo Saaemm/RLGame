@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Callable, Tuple
 from tcod.console import Console
 import tcod.event
 import tcod.constants
@@ -10,7 +10,6 @@ from tcod.event import KeyDown, MouseButtonDown, MouseMotion, Quit
 import actions
 from actions import (Action, EscapeAction, BumpAction, WaitAction, PickupAction)
 import configs.color as color
-from entity import Item
 import exceptions
 
 if TYPE_CHECKING:
@@ -95,6 +94,9 @@ class MainGameEventHandler(EventHandler):
             #inventory drop
             self.engine.event_handler = InventoryDropHandler(self.engine)
 
+        elif key == tcod.event.KeySym.SLASH:
+            self.engine.event_handler = LookHandler(self.engine)
+
         #no valid key was pressed
         return action
     
@@ -111,7 +113,7 @@ class GameOverEventHandler(EventHandler):
             console.print(
                 x=30,
                 y=25,
-                string="GAME OVER"
+                string="GAME OVER",
             )
 
     def ev_keydown(self, event: KeyDown) -> Action | None:
@@ -295,3 +297,108 @@ class InventoryDropHandler(InventoryEventHandler):
     def on_item_selected(self, item: Item) -> Action | None:
         '''Drops the item'''
         return actions.DropItem(self.engine.player, item)
+    
+
+class SelectIndexHandler(AskUserEventHandler):
+    '''Handles asking user for an index on the map using mouse'''
+
+    def __init__(self, engine: Engine):
+        '''Sets the cursor to the player when this is constructe '''
+        super().__init__(engine)
+        player = self.engine.player
+        engine.mouse_location = player.x, player.y
+
+    def on_render(self, console: Console) -> None:
+        '''Highlight the tile under the cursor'''
+        super().on_render(console)
+        x, y = self.engine.mouse_location
+        console.tiles_rgb["bg"][x, y] = color.white
+        console.tiles_rgb["fg"][x, y] = color.black
+
+    def ev_keydown(self, event: KeyDown) -> Action | None:
+        '''Check for key movement or confirmation keys'''
+        key = event.sym  #Holding modifier keys will speed up movements
+        if key in config.MOVE_KEYS:
+            modifier = 1
+            if event.mod & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT):
+                modifier *= 5
+            elif event.mod & (tcod.event.KMOD_LCTRL | tcod.event.KMOD_RCTRL):
+                modifier *= 10
+            elif event.mod & (tcod.event.KMOD_LALT | tcod.event.KMOD_RALT):
+                modifier *= 20
+
+            x, y = self.engine.mouse_location
+            dx, dy = config.MOVE_KEYS[key]
+            x += dx * modifier
+            y += dy * modifier
+            #clamp x, y on both sides of the map
+            x = max(0, min(x, self.engine.game_map.width-1))
+            y = max(0, min(y, self.engine.game_map.height-1))
+            self.engine.mouse_location = x, y
+            return None
+
+        elif key in config.CONFIRM_KEYS:
+            return self.on_index_selected(*self.engine.mouse_location)
+
+        return super().ev_keydown(event=event)
+    
+    def ev_mousebuttondown(self, event: MouseButtonDown) -> Action | None:
+        '''Left click confirms a selection'''
+
+        if self.engine.game_map.in_bounds(*event.tile):
+            if event.button == 1:
+                return self.on_index_selected(*self.engine.mouse_location)
+        return super().ev_mousebuttondown(event)
+    
+    def on_index_selected(self, x: int, y: int) -> Action | None:
+        '''Called when index is selected'''
+        raise NotImplementedError()
+    
+
+class LookHandler(SelectIndexHandler):
+    '''Allows user to look around with keyboard'''
+
+    def on_index_selected(self, x: int, y: int) -> None:
+        '''Returns to Main Event Handler'''
+        self.engine.event_handler = MainGameEventHandler(self.engine)
+
+
+class SingleRangedAttackHandler(SelectIndexHandler):
+    def __init__(self, engine: Engine, callback: Callable[[Tuple[int, int]], Optional[Action]]):
+        super().__init__(engine)
+
+        self.callback = callback  #function that takes in a tuple (x, y) and returns Action | None
+
+    def on_index_selected(self, x: int, y: int) -> Action | None:
+        return self.callback((x, y))
+    
+class AreaRangedAttackHandler(SelectIndexHandler):
+    def __init__(
+        self, 
+        engine: Engine,
+        radius: int,
+        callback: Callable[[Tuple[int, int]], Optional[Action]]
+    ):
+        super().__init__(engine)
+
+        self.radius = radius
+        self.callback = callback
+
+    def on_render(self, console: Console) -> None:
+        '''Highlights radius'''
+        super().on_render(console)
+
+        x, y = self.engine.mouse_location
+
+        #draws a red rectangle around blast radius
+        console.draw_frame(
+            x=x - self.radius - 1,
+            y=y - self.radius - 1,
+            width=self.radius ** 2,
+            height=self.radius ** 2,
+            fg=color.red,
+            clear=False,
+        )
+
+    def on_index_selected(self, x: int, y: int) -> Action | None:
+        return self.callback((x, y))

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import List, Tuple, TYPE_CHECKING
+import random
+from typing import List, Optional, Tuple, TYPE_CHECKING
 
 import numpy as np
 import tcod
 
-from actions import Action, MeleeAction, MovementAction, WaitAction
-from entity import Entity
+from actions import Action, BumpAction, MeleeAction, MovementAction, WaitAction
 
 if TYPE_CHECKING:
     from entity import Actor
@@ -80,3 +80,46 @@ class HostileEnemy(BaseAI):
         
         #not in player's vision, so wait
         return WaitAction(self.entity).perform()
+
+
+class ConfusedEnemy(BaseAI):
+    '''Confused entity will walk around aimlessly for a few rounds
+    Will attack any actor that occupies a tile that it is moving into
+    '''
+
+    def __init__(self, entity: Actor, previous_ai: BaseAI, turns_remaining: int) -> None:
+        super().__init__(entity)
+
+        self.previous_ai = previous_ai
+        self.turns_remaining = turns_remaining
+
+    def perform(self) -> None:
+
+        #revert the AI back into its previous form after turns_remaining reaches 0
+        if self.turns_remaining <= 0:
+            self.engine.message_log.add_message(
+                f"{self.entity.name} is no longer confused."
+            )
+            self.entity.ai = self.previous_ai
+
+        else:  #is still confused
+            #pick random direction
+            direction_x, direction_y = random.choice(
+                [
+                    (-1, -1),  #northwest
+                    (0, -1), #north
+                    (1, -1), #northeast
+                    (-1, 0), #west
+                    (1, 0),  #east
+                    (-1, 1),  #southwest
+                    (0, 1),  #south
+                    (1, 1),  #southeast
+                ]
+            )
+
+            self.turns_remaining -= 1
+            
+            #actor will try to move and attack in a random direction
+            #can just bump into a wall, and waste a turn
+
+            return BumpAction(self.entity, direction_x, direction_y,).perform()
