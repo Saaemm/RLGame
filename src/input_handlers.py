@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from typing import Union, Optional, TYPE_CHECKING, Callable, Tuple
 from tcod.console import Console
 import tcod.event
@@ -41,11 +43,37 @@ class BaseEventHandler (tcod.event.EventDispatch[ActionOrHandler]):
     def ev_quit(self, event: Quit) -> ActionOrHandler | None:
         raise SystemExit()
 
+class PopupMessage(BaseEventHandler):
+    '''Displays a popup message with text'''
+
+    def __init__(self, parent_handler: BaseEventHandler, text: str) -> None:
+        self.parent = parent_handler  #can go back
+        self.text = text
+
+    def on_render(self, console: tcod.console.Console) -> None:
+        '''Renders the parent and dim the result, then print the message on top.'''
+        self.parent.on_render(console)
+        console.tiles_rgb["fg"] //= 8  #dims
+        console.tiles_rgb["bg"] //= 8  #dims
+
+        console.print(
+            console.width // 2,
+            console.height // 2,
+            self.text,
+            fg=color.white,
+            bg=color.black,
+            alignment=tcod.constants.CENTER,
+        )
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[BaseEventHandler]:
+        '''Any key returns to parent handler'''
+        return self.parent
 
 class EventHandler(BaseEventHandler):
 
     #turns events into actions, each function returns none or action
     def __init__(self, engine: Engine):
+        #TODO: check that this is a real engine
         self.engine = engine
 
     def handle_events(self, event: tcod.event.Event) -> BaseEventHandler:
@@ -136,7 +164,8 @@ class MainGameEventHandler(EventHandler):
         return action
     
 
-class GameOverEventHandler(EventHandler):
+class GameOverEventHandler(EventHandler):  
+    #TODO: can consider making this a hybrid of both popup and event handler for restart etc or a popup w/ parent as event handler
 
     def on_render(self, console: Console) -> None:
         super().on_render(console)
@@ -155,10 +184,20 @@ class GameOverEventHandler(EventHandler):
 
         #Can only escape
         if event.sym in config.ESCAPE_KEYS:
-            raise SystemExit()
+            self.on_quit()  #goes to another dispatch that exits the game
         
         return None
     
+    def on_quit(self) -> None:
+        #TODO: see setup_game.py for long todo to change this instead of deleting
+        #TODO: possibly add a spectator mode after death, can be easy -- just change visible
+        '''Handles exiting the game when the player is dead, mainly deleting the save file to prevent bug'''
+        if os.path.exists("savegame.sav"): #TODO: change savegame.sav to save/savegame.sav + multiple save files
+            os.remove("savegame.sav")
+        raise exceptions.QuitWithoutSaving() #Avoid saving a finished game, exits
+    
+    def ev_quit(self, event: Quit) -> ActionOrHandler | None:
+        self.on_quit()  #exits
 
 class HistoryViewer(EventHandler):
     '''Prints the message log history on a larger window that can be navigated'''
@@ -255,6 +294,10 @@ class InventoryEventHandler(AskUserEventHandler):
         '''Renders an inventory menu, displays the items in the inventory, and the letter to select them.
         Will move to a different position based on where the player is located, 
         so the player can always see where they are'''
+
+        #TODO: find a way to solve TODOS
+        #TODO: compress the same items up to a limit
+
         super().on_render(console)
         number_of_items_in_inventory = len(self.engine.player.inventory.items)
 

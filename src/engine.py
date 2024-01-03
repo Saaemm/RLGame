@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import lzma  #lzma.compress does compression on object
+import pickle  #pickles.dump serializes object hierarchy in Python
+
 from typing import TYPE_CHECKING
 
 from tcod.console import Console
@@ -62,3 +65,13 @@ class Engine:
 
         #prints mouse hovering info
         render_names_at_mouse_location(console=console, x=21, y=44, engine=self)
+
+    def save_as(self, filename: str) -> None:
+        '''Saves this engine state as a compressed file        
+        Note the engine defines the state
+        '''
+        save_data = lzma.compress(pickle.dumps(self))
+
+        #TODO: put this file in saves folder...
+        with open(filename, "wb") as f:  #saves in saves folder
+            f.write(save_data)

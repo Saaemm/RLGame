@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
-import copy
 import traceback
 
 import tcod
 
 import configs.color as color
-from engine import Engine
-import entity_factories
 import exceptions
-from procgen import generate_dungeon
 import input_handlers
+import setup_game
 
 #shebang for ./src/main.py and imports
+
+def save_game(handler: input_handlers.BaseEventHandler, filename: str) -> None:
+    '''If the current handler has an engine that is initialized and viable, then save'''
+    if isinstance(handler, input_handlers.EventHandler):
+        handler.engine.save_as(filename)
+        print('Game Saved') # on command line
 
 def main():
 
@@ -19,46 +22,12 @@ def main():
     screen_width = 80
     screen_height = 50
 
-    #map vars
-    map_width = 80
-    map_height = 43
-
-    room_max_size = 10
-    room_min_size = 6
-    max_rooms = 30
-
-    max_monsters_per_room = 2
-    max_items_per_room = 2
-
     #32x8 tilesheet using font, returns Tileset
     tileset = tcod.tileset.load_tilesheet(
         "assets/terminal10x10_gs_tc.png", 32, 8, tcod.tileset.CHARMAP_TCOD
     )
 
-    #player init (cannot use spawn by needing gamemap which is created later on)
-    player = copy.deepcopy(entity_factories.player)
-
-    #engine init
-    engine = Engine(player=player)
-
-    #gamemap inits
-    engine.game_map = generate_dungeon(
-        max_rooms=max_rooms,
-        room_min_size=room_min_size,
-        room_max_size=room_max_size,
-        map_width=map_width, 
-        map_height=map_height,
-        max_monsters_per_room=max_monsters_per_room,
-        max_items_per_room=max_items_per_room,
-        engine=engine
-    )
-    engine.update_fov()
-
-    engine.message_log.add_message(
-        "Hello fellow human, and welcome to [generic roguelike game]!", color.welcome_text
-    )
-
-    handler: input_handlers.BaseEventHandler = input_handlers.MainGameEventHandler(engine)
+    handler: input_handlers.BaseEventHandler = setup_game.MainMenu()
 
     #creates screen, can change configurations for title, vsync, windowflags, renderer
     with tcod.context.new_terminal(
@@ -87,20 +56,25 @@ def main():
                         #mouse position information
                         context.convert_event(event)
                         #gets user inputs and changes states accordingly
+                        #now, every time we handle events, a handler gets returned, while action is handled
                         handler = handler.handle_events(event)
                 except Exception:  #Handles exceptions
                     traceback.print_exc()  #Print error to stderr
                     #prints error to message log
                     if isinstance(handler, input_handlers.EventHandler):
-                        engine.message_log.add_message(traceback.format_exc(), color.error)
+                        handler.engine.message_log.add_message(traceback.format_exc(), color.error)
 
         except exceptions.QuitWithoutSaving:
-            raise 
+            raise #just exits the game
+        
+        #TODO: multiple save files
+        #TODO: add a save game button (maybe limits on the saves on certain difficulties?)
+
         except SystemExit: #Save and Quit
-            #TODO: add save function here
+            save_game(handler, "savegame.sav")
             raise
         except BaseException: #save on any unexpected error
-            #TODO: save function
+            save_game(handler, "savegame.sav")
             raise
 
 
