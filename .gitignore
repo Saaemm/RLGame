@@ -1,2 +1,5 @@
 #ignores python vitual environment
 .venv
+
+#ignores saved games
+*.sav
