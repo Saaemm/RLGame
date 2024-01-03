@@ -6,7 +6,6 @@ import configs.color as color
 
 from components.base_component import BaseComponent
 from configs.render_order import RenderOrder
-from input_handlers import GameOverEventHandler
 
 if TYPE_CHECKING:
     from entity import Actor
@@ -33,8 +32,7 @@ class Fighter(BaseComponent):
 
     def die(self) -> None:
         if self.engine.player is self.parent:   #player death
-            #Change over to game over event handler
-            self.engine.event_handler = GameOverEventHandler(self.engine)
+            #event handler changed in MainEventHandler
             death_message = "You died!"
             death_color = color.player_die
         else:

@@ -7,8 +7,9 @@ import tcod
 import configs.color as color
 from engine import Engine
 import entity_factories
+import exceptions
 from procgen import generate_dungeon
-from input_handlers import EventHandler
+import input_handlers
 
 #shebang for ./src/main.py and imports
 
@@ -57,6 +58,8 @@ def main():
         "Hello fellow human, and welcome to [generic roguelike game]!", color.welcome_text
     )
 
+    handler: input_handlers.BaseEventHandler = input_handlers.MainGameEventHandler(engine)
+
     #creates screen, can change configurations for title, vsync, windowflags, renderer
     with tcod.context.new_terminal(
         screen_width, screen_height, 
@@ -69,26 +72,39 @@ def main():
         #order is access [x, y] order instead of [y, x] order
         root_console = tcod.console.Console(screen_width, screen_height, order="F")
 
+        try:
+            #game loop, ends when screen closes
+            while True:
 
-        #game loop, ends when screen closes
-        while True:
+                #updates and clears and renders
+                root_console.clear()
+                handler.on_render(console=root_console)
+                context.present(root_console)
 
-            #updates and clears and renders
-            root_console.clear()
-            engine.event_handler.on_render(console=root_console)
-            context.present(root_console)
+                #Handles events and errors
+                try:
+                    for event in tcod.event.wait():
+                        #mouse position information
+                        context.convert_event(event)
+                        #gets user inputs and changes states accordingly
+                        handler = handler.handle_events(event)
+                except Exception:  #Handles exceptions
+                    traceback.print_exc()  #Print error to stderr
+                    #prints error to message log
+                    if isinstance(handler, input_handlers.EventHandler):
+                        engine.message_log.add_message(traceback.format_exc(), color.error)
 
-            #Handles events and errors
-            try:
-                for event in tcod.event.wait():
-                    #mouse position information
-                    context.convert_event(event)
-                    #gets user inputs and changes states accordingly
-                    engine.event_handler.handle_events(event)
-            except Exception:  #Handles exceptions
-                traceback.print_exc()  #Print error to stderr
-                #prints error to message log
-                engine.message_log.add_message(traceback.format_exc(), color.error)
+        except exceptions.QuitWithoutSaving:
+            raise 
+        except SystemExit: #Save and Quit
+            #TODO: add save function here
+            raise
+        except BaseException: #save on any unexpected error
+            #TODO: save function
+            raise
+
+
+
 
 
 if __name__ == "__main__":
