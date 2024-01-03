@@ -10,7 +10,7 @@ import components.inventory
 from components.base_component import BaseComponent
 from entity import Actor
 from exceptions import Impossible
-from input_handlers import SingleRangedAttackHandler, AreaRangedAttackHandler
+from input_handlers import ActionOrHandler, SingleRangedAttackHandler, AreaRangedAttackHandler
 
 if TYPE_CHECKING:
     from entity import Actor, Item
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class Consumable(BaseComponent):
     parent: Item
 
-    def get_action(self, consumer: Actor) -> Optional[actions.Action]:
+    def get_action(self, consumer: Actor) -> Optional[ActionOrHandler]:
         '''Try to return the action for this item.'''
         return actions.ItemAction(consumer, self.parent)
     
@@ -91,15 +91,14 @@ class ConfusionConsumable(Consumable):
     def __init__(self, number_of_turns: int) -> None:
         self.number_of_turns = number_of_turns
 
-    def get_action(self, consumer: Actor) -> Action | None:
+    def get_action(self, consumer: Actor) -> SingleRangedAttackHandler:
         self.engine.message_log.add_message(
             "Select a target location.", color.needs_target
         )
-        self.engine.event_handler = SingleRangedAttackHandler(
+        return SingleRangedAttackHandler(
             self.engine,
             callback=lambda xy: ItemAction(consumer, self.parent, xy)
         )
-        return None
     
     def activate(self, action: ItemAction):
         consumer = action.entity
@@ -126,15 +125,15 @@ class FireballDamageConsumable(Consumable):
         self.damage = damage
         self.radius = radius
 
-    def get_action(self, consumer: Actor) -> Action | None:
+    def get_action(self, consumer: Actor) -> AreaRangedAttackHandler:
         self.engine.message_log.add_message("Select a target location.", color.needs_target)
 
-        self.engine.event_handler = AreaRangedAttackHandler(
+        return AreaRangedAttackHandler(
             engine=self.engine, 
             radius=self.radius, 
             callback=lambda xy: ItemAction(consumer, self.parent, xy)
         )
-        return None  #does not need to return anything as actions are handled in action class
+        #actions are handled in action class
     
     def activate(self, action: ItemAction) -> None:
         target_xy = action.target_xy
