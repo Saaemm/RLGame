@@ -122,6 +122,9 @@ def generate_dungeon(
     #temp structure to keep track of rooms already added for no overlap and other features
     rooms: List[RectangularRoom] = []
 
+    #keep track of where the last room is to make the stiars descending down
+    center_of_last_room = (0, 0)
+
     #max_room tries for new rooms
     for r in range(max_rooms):
 
@@ -150,9 +153,15 @@ def generate_dungeon(
             for x, y in tunnel_between(rooms[-1].center, new_room.center):
                 dungeon.tiles[x, y] = tile_types.floor
 
+            center_of_last_room = new_room.center
+
         #add entities
         place_entities(new_room, dungeon, max_monsters_per_room, max_items_per_room)
         
+        #add downstairs
+        dungeon.tiles[center_of_last_room] = tile_types.down_stairs  #TODO: understand why this doesn't create stairs in every room
+        dungeon.downstairs_location = center_of_last_room
+
         #append the new room to the rooms list
         rooms.append(new_room)
 

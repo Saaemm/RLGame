@@ -10,7 +10,7 @@ import configs.interface_config as config
 from tcod.event import KeyDown, MouseButtonDown, MouseMotion, Quit
 
 import actions
-from actions import (Action, EscapeAction, BumpAction, WaitAction, PickupAction)
+from actions import (Action, EscapeAction, BumpAction, WaitAction, PickupAction, TakeStairsAction)
 import configs.color as color
 import exceptions
 
@@ -129,8 +129,14 @@ class MainGameEventHandler(EventHandler):
         action: Optional[Action] = None
 
         key = event.sym
+        modifier = event.mod
 
         player = self.engine.player
+
+        if key == tcod.event.KeySym.PERIOD and modifier and (
+            tcod.event.KMOD_LSHIFT or tcod.event.KMOD_RSHIFT
+        ):
+            return TakeStairsAction(player)  #returns this action because this is an if not elif
 
         if key in config.MOVE_KEYS:
             dx, dy = config.MOVE_KEYS[key]
@@ -383,8 +389,8 @@ class SelectIndexHandler(AskUserEventHandler):
         '''Highlight the tile under the cursor'''
         super().on_render(console)
         x, y = self.engine.mouse_location
-        console.tiles_rgb["bg"][x, y] = color.white
-        console.tiles_rgb["fg"][x, y] = color.black
+        console.rgb["bg"][x, y] = color.white
+        console.rgb["fg"][x, y] = color.black
 
     def ev_keydown(self, event: KeyDown) -> ActionOrHandler | None:
         '''Check for key movement or confirmation keys'''
