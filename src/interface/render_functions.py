@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Tuple, TYPE_CHECKING
 
 import configs.color as color
 
 if TYPE_CHECKING:
-    from tcod import console
+    from tcod import console, event
     from engine import Engine
     from game_map import GameMap
 
@@ -27,6 +27,13 @@ def render_bar(
         x=1, y=45, string=f"HP: {current_value}/{maximum_value}", fg=color.bar_text
     )
 
+def render_dungeon_level(
+        console: console.Console, dungeon_level: int, location: Tuple[int, int]
+):
+    '''Renders the level the player is currently on, at location ont he console'''
+    x, y = location
+
+    console.print(x=x, y=y, string=f"Dungeon Level: {dungeon_level}")
 
 def get_names_at_location(x: int, y: int, game_map: GameMap) -> str:
     if not game_map.in_bounds(x, y) or not game_map.visible[x, y]:
