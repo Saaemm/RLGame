@@ -36,7 +36,7 @@ class Engine:
                 try:
                     entity.ai.perform()
                 except exceptions.Impossible:
-                    pass  # Ignore impossible action exceptions from AI for now
+                    pass  # Ignore impossible action esxceptions from AI for now
 
     def update_fov(self) -> None:
         '''Recompute the visible area based on the player's POV'''
