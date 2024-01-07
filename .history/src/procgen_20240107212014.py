@@ -74,12 +74,6 @@ def get_entities_at_random(
     entities = list(entity_weighted_chances.keys())
     entity_weighted_chance_values = list(entity_weighted_chances.values())
 
-    chosen_entities = random.choices(
-        entities, weights=entity_weighted_chance_values, k=number_of_entities
-    )
-
-    return chosen_entities
-
 
 class RectangularRoom: 
 
@@ -120,20 +114,34 @@ def place_entities(
     number_of_monsters = random.randint(0, get_max_value_for_floor(max_monsters_by_floor, floor_number))
     number_of_items = random.randint(0, get_max_value_for_floor(max_items_by_floor, floor_number))
 
-    monsters: List[Entity] = get_entities_at_random(
-        enemy_chances, number_of_monsters, floor_number,
-    )
-
-    items: List[Entity] = get_entities_at_random(
-        item_chances, number_of_items, floor_number,
-    )
-
-    for entity in items + monsters:
+    for i in range(number_of_monsters):
         x = random.randint(room.x1 + 1, room.x2 - 1)
         y = random.randint(room.y1 + 1, room.y2 - 1)
 
         if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
-            entity.spawn(dungeon, x, y)
+
+            if random.random() < 0.8: 
+                #spawns orc
+                entity_factories.orc.spawn(dungeon, x, y)
+            else:
+                #spawns troll
+                entity_factories.troll.spawn(dungeon, x, y)
+
+    for i in range(number_of_items):
+        x = random.randint(room.x1 + 1, room.x2 - 1)
+        y = random.randint(room.y1 + 1, room.y2 - 1)
+
+        if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
+            item_chance = random.random()
+
+            if item_chance < 0.7:
+                entity_factories.health_potion.spawn(dungeon, x, y)
+            elif item_chance < 0.8:
+                entity_factories.fireball_scroll.spawn(dungeon, x, y)
+            elif item_chance < 0.9:
+                entity_factories.confusion_scroll.spawn(dungeon, x, y)
+            else:
+                entity_factories.lightning_scroll.spawn(dungeon, x, y)
 
 def tunnel_between(
     start: Tuple[int, int], end: Tuple[int, int]

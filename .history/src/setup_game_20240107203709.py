@@ -35,6 +35,9 @@ def new_game() -> Engine:
     room_min_size = 6
     max_rooms = 30
 
+    max_monsters_per_room = 2
+    max_items_per_room = 2
+
     #player init (cannot use spawn by needing gamemap which is created later on)
     player = copy.deepcopy(entity_factories.player)
 
