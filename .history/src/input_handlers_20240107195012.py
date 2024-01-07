@@ -369,7 +369,6 @@ class LevelUpHandler(AskUserEventHandler):
         console.print(x=x+1, y=1, string="Select an attribute to increase.")
 
         #TODO: add skill trees/skills
-        #TODO: ability to pass up on level up for now
         console.print(
             x=x + 1,
             y=4,
