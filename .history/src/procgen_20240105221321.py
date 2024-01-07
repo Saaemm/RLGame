@@ -150,7 +150,6 @@ def generate_dungeon(
             player.place(*new_room.center, dungeon)
         else: #all rooms after the first
             #dig a tunnel between this and the previous one
-            #TODO: add more interesting tunnels/dungeon features
             for x, y in tunnel_between(rooms[-1].center, new_room.center):
                 dungeon.tiles[x, y] = tile_types.floor
 

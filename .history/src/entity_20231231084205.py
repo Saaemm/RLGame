@@ -12,7 +12,6 @@ if TYPE_CHECKING:
     from components.fighter import Fighter
     from components.inventory import Inventory
     from game_map import GameMap
-    from components.level import Level
 
 T = TypeVar("T", bound="Entity")
 
@@ -99,7 +98,6 @@ class Actor(Entity):
             ai_cls: Type[BaseAI],
             fighter: Fighter, 
             inventory: Inventory,
-            level: Level,
     ) -> None:
         super().__init__(
             parent=parent, 
@@ -120,9 +118,6 @@ class Actor(Entity):
 
         self.inventory = inventory
         self.inventory.parent = self
-
-        self.level = level
-        self.level.parent = self
 
     @property
     def is_alive(self) -> bool: 

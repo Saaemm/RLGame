@@ -89,7 +89,7 @@ class EventHandler(BaseEventHandler):
             if not self.engine.player.is_alive:
                 #player killed some time during or after action
                 return GameOverEventHandler(self.engine)
-            elif self.engine.player.level.requires_level_up:
+            elif self.player.level.requires_level_up:
                 #if player needs levelling up, then level up
                 return LevelUpHandler(self.engine)
 
@@ -206,7 +206,6 @@ class GameOverEventHandler(EventHandler):
     def on_quit(self) -> None:
         #TODO: see setup_game.py for long todo to change this instead of deleting
         #TODO: possibly add a spectator mode after death, can be easy -- just change visible
-        #TODO: add manual save
         '''Handles exiting the game when the player is dead, mainly deleting the save file to prevent bug'''
         if os.path.exists("savegame.sav"): #TODO: change savegame.sav to save/savegame.sav + multiple save files
             os.remove("savegame.sav")
@@ -385,7 +384,7 @@ class LevelUpHandler(AskUserEventHandler):
         )
 
     def ev_keydown(self, event: KeyDown) -> ActionOrHandler | None:
-        player = self.engine.player
+        player = self.player
         key = event.sym
         index = key - tcod.event.KeySym.a
 
@@ -421,7 +420,6 @@ class InventoryEventHandler(AskUserEventHandler):
 
         #TODO: find a way to solve TODOS
         #TODO: compress the same items up to a limit
-        #TODO: make a way to organize an inventory
 
         super().on_render(console)
         number_of_items_in_inventory = len(self.engine.player.inventory.items)

@@ -57,4 +57,3 @@ down_stairs = new_tile(
 )
 
 #TODO: make doors (impassible and passable)
-#TODO: can make trap door

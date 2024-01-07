@@ -206,7 +206,6 @@ class GameOverEventHandler(EventHandler):
     def on_quit(self) -> None:
         #TODO: see setup_game.py for long todo to change this instead of deleting
         #TODO: possibly add a spectator mode after death, can be easy -- just change visible
-        #TODO: add manual save
         '''Handles exiting the game when the player is dead, mainly deleting the save file to prevent bug'''
         if os.path.exists("savegame.sav"): #TODO: change savegame.sav to save/savegame.sav + multiple save files
             os.remove("savegame.sav")
