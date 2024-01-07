@@ -420,7 +420,6 @@ class InventoryEventHandler(AskUserEventHandler):
 
         #TODO: find a way to solve TODOS
         #TODO: compress the same items up to a limit
-        #TODO: make a way to organize an inventory
 
         super().on_render(console)
         number_of_items_in_inventory = len(self.engine.player.inventory.items)

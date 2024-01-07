@@ -89,7 +89,7 @@ class EventHandler(BaseEventHandler):
             if not self.engine.player.is_alive:
                 #player killed some time during or after action
                 return GameOverEventHandler(self.engine)
-            elif self.engine.player.level.requires_level_up:
+            elif self.player.level.requires_level_up:
                 #if player needs levelling up, then level up
                 return LevelUpHandler(self.engine)
 
@@ -384,7 +384,7 @@ class LevelUpHandler(AskUserEventHandler):
         )
 
     def ev_keydown(self, event: KeyDown) -> ActionOrHandler | None:
-        player = self.engine.player
+        player = self.player
         key = event.sym
         index = key - tcod.event.KeySym.a
 
@@ -420,7 +420,6 @@ class InventoryEventHandler(AskUserEventHandler):
 
         #TODO: find a way to solve TODOS
         #TODO: compress the same items up to a limit
-        #TODO: make a way to organize an inventory
 
         super().on_render(console)
         number_of_items_in_inventory = len(self.engine.player.inventory.items)

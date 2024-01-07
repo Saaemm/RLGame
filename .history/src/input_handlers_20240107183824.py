@@ -84,15 +84,9 @@ class EventHandler(BaseEventHandler):
         
         if self.handle_action(action_or_state):
             #Valid action is performed
-
-            #check for automatic switching to different game input states
             if not self.engine.player.is_alive:
                 #player killed some time during or after action
                 return GameOverEventHandler(self.engine)
-            elif self.engine.player.level.requires_level_up:
-                #if player needs levelling up, then level up
-                return LevelUpHandler(self.engine)
-
             return MainGameEventHandler(self.engine)
         
         return self
@@ -171,9 +165,6 @@ class MainGameEventHandler(EventHandler):
 
         elif key == tcod.event.KeySym.SLASH:
             return LookHandler(self.engine)
-
-        elif key == tcod.event.KeySym.c:
-            return CharacterScreenEventHandler(self.engine)
 
         #no valid key was pressed
         return action
@@ -297,51 +288,6 @@ class AskUserEventHandler(EventHandler):
         '''
         return MainGameEventHandler(self.engine)
 
-class CharacterScreenEventHandler(AskUserEventHandler):
-    TITLE = "Character Information"
-
-    def on_render(self, console: tcod.console.Console) -> None:
-        super().on_render(console)
-
-        if self.engine.player.x <= 30:
-            x = 40
-        else:
-            x = 0
-
-        y = 0
-
-        width = len(self.TITLE) + 4
-
-        console.draw_frame(
-            x=x,
-            y=y,
-            width=width,
-            height=7,
-            title=self.TITLE,
-            clear=True,
-            fg=(255, 255, 255),
-            bg=(0, 0, 0),
-        )
-
-        console.print(
-            x=x + 1, y=y + 1, string=f"Level: {self.engine.player.level.current_level}"
-        )
-        console.print(
-            x=x + 1, y=y + 2, string=f"XP: {self.engine.player.level.current_xp}"
-        )
-        console.print(
-            x=x + 1,
-            y=y + 3,
-            string=f"XP for next Level: {self.engine.player.level.experience_to_next_level}",
-        )
-
-        console.print(
-            x=x + 1, y=y + 4, string=f"Attack: {self.engine.player.fighter.power}"
-        )
-        console.print(
-            x=x + 1, y=y + 5, string=f"Defense: {self.engine.player.fighter.defense}"
-        )
-
 class LevelUpHandler(AskUserEventHandler):
     TITLE = "Level Up"
 
@@ -384,7 +330,7 @@ class LevelUpHandler(AskUserEventHandler):
         )
 
     def ev_keydown(self, event: KeyDown) -> ActionOrHandler | None:
-        player = self.engine.player
+        player = self.player
         key = event.sym
         index = key - tcod.event.KeySym.a
 
@@ -420,7 +366,6 @@ class InventoryEventHandler(AskUserEventHandler):
 
         #TODO: find a way to solve TODOS
         #TODO: compress the same items up to a limit
-        #TODO: make a way to organize an inventory
 
         super().on_render(console)
         number_of_items_in_inventory = len(self.engine.player.inventory.items)
