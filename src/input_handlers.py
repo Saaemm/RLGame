@@ -12,6 +12,7 @@ from tcod.event import KeyDown, MouseButtonDown, MouseMotion, Quit
 import actions
 from actions import (Action, EscapeAction, BumpAction, WaitAction, PickupAction, TakeStairsAction)
 import configs.color as color
+from engine import Engine
 import exceptions
 from entity import EquippableItem, ConsumableItem
 
@@ -297,6 +298,87 @@ class AskUserEventHandler(EventHandler):
         By default, returns to the main event handler
         '''
         return MainGameEventHandler(self.engine)
+    
+class AttributeSelection(EventHandler):
+    '''Allows the player to select attributes'''
+
+    def __init__(
+            self, 
+            engine: Engine, 
+            skill_points: int, 
+            base_hp_pts: int = 0, 
+            base_attack_pts: int = 0, 
+            base_defense_pts: int = 0,
+        ):
+        super().__init__(engine)
+        self.skill_points = skill_points
+        self.current_skill_points = skill_points
+
+        self.hp_points = base_hp_pts
+        self.defense_points = base_defense_pts
+        self.power_points = base_attack_pts
+    
+    def on_render(self, console: Console) -> None:
+        super().on_render(console)
+        pass
+
+    def ev_keydown(self, event: KeyDown) -> ActionOrHandler | None:
+        player = self.engine.player
+        key = event.sym
+        index = key - tcod.event.KeySym.a
+
+        if key == tcod.event.KeySym.KP_ENTER:
+            if self.skill_points != self.current_skill_points:
+                return PopupMessage() #TODO: can change this into render too
+            
+            player.fighter.hp = 5 + 5 * self.hp_points
+            player.fighter.base_defense = self.defense_points
+            player.fighter.base_power = self.power_points
+            return MainGameEventHandler(self.engine)
+
+        if 0 <= index <= 2:
+            
+            if self.current_skill_points <= 0:
+                return PopupMessage()
+            
+            self.current_skill_points -= 1
+
+            if index == 0:
+                self.hp_points += 1
+            elif index == 1:
+                self.power_points += 1
+            elif index == 2:
+                self.defense_points += 1
+
+
+        elif 3 <= index <= 5:
+
+            if self.current_skill_points >= self.skill_points:
+                return PopupMessage()
+
+            self.current_skill_points += 1
+
+            if index == 3:
+                if self.hp_points <= 0:
+                    return PopupMessage()
+                self.hp_points -= 1
+            elif index == 4:
+                if self.power_points <= 0:
+                    return PopupMessage()
+                self.power_points -= 1
+            elif index == 5:
+                if self.defense_points <= 0:
+                    return PopupMessage
+                self.defense_points -= 1
+        
+        else:
+            return PopupMessage() #TODO: IMPLEMENT THIS CORRECTLY
+            
+        return None
+
+    def ev_mousebuttondown(self, event: MouseButtonDown) -> ActionOrHandler | None:
+        '''Don't allow any action when mouse down (when originally, it would have exited)'''
+        return None
 
 class CharacterScreenEventHandler(AskUserEventHandler):
     TITLE = "Character Information"
