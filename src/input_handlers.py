@@ -54,8 +54,8 @@ class PopupMessage(BaseEventHandler):
     def on_render(self, console: tcod.console.Console) -> None:
         '''Renders the parent and dim the result, then print the message on top.'''
         self.parent.on_render(console)
-        console.tiles_rgb["fg"] //= 8  #dims
-        console.tiles_rgb["bg"] //= 8  #dims
+        console.rgb["fg"] //= 8  #dims
+        console.rgb["bg"] //= 8  #dims
 
         console.print(
             console.width // 2,
@@ -305,7 +305,7 @@ class AttributeSelection(EventHandler):
     def __init__(
             self, 
             engine: Engine, 
-            skill_points: int, 
+            skill_points: int = 10, 
             base_hp_pts: int = 0, 
             base_attack_pts: int = 0, 
             base_defense_pts: int = 0,
@@ -319,19 +319,68 @@ class AttributeSelection(EventHandler):
         self.power_points = base_attack_pts
     
     def on_render(self, console: Console) -> None:
-        super().on_render(console)
-        pass
+
+        #TODO: make this prettier
+        
+        console.print(
+            console.width // 2,
+            console.height // 2 - 4,
+            "Create your character!",
+            fg=color.menu_title,
+            alignment=tcod.constants.CENTER,
+        )
+        console.print(
+            console.width // 2,
+            console.height - 4,
+            f"hp points: {self.hp_points}, power points: {self.power_points}, defense points: {self.defense_points}",
+            fg=color.menu_title,
+            alignment=tcod.constants.CENTER,
+        )
+
+        menu_width = 24
+
+        console.print(
+                console.width // 2,
+                console.height // 2 - 7,
+                f"Skill points remaining: {self.current_skill_points} / {self.skill_points}",
+                fg=color.menu_text,
+                bg=color.black,
+                alignment=tcod.constants.CENTER,
+                bg_blend=tcod.constants.BKGND_ALPH,  #check again later
+            )
+
+        for i, text in enumerate(
+            [
+                "(a) increase hp by 5", 
+                "(b) increase power by 1", 
+                "(c) increase defense by 1", 
+                "(d) decrease hp by 5", 
+                "(e) decrease power by 1", 
+                "(f) decrease defense by 1"
+            ]
+        ):
+            console.print(
+                console.width // 2,
+                console.height // 2 - 2 + i,
+                text.ljust(menu_width),
+                fg=color.menu_text,
+                bg=color.black,
+                alignment=tcod.constants.CENTER,
+                bg_blend=tcod.constants.BKGND_ALPH,  #check again later
+            )
+
 
     def ev_keydown(self, event: KeyDown) -> ActionOrHandler | None:
         player = self.engine.player
         key = event.sym
         index = key - tcod.event.KeySym.a
 
-        if key == tcod.event.KeySym.KP_ENTER:
-            if self.skill_points != self.current_skill_points:
-                return PopupMessage() #TODO: can change this into render too
+        if key in config.CONFIRM_KEYS:
+            if self.current_skill_points != 0:
+                return PopupMessage(self, "Spend all your points!")
             
             player.fighter.hp = 5 + 5 * self.hp_points
+            player.fighter.max_hp = 5 + 5 * self.hp_points
             player.fighter.base_defense = self.defense_points
             player.fighter.base_power = self.power_points
             return MainGameEventHandler(self.engine)
@@ -339,7 +388,7 @@ class AttributeSelection(EventHandler):
         if 0 <= index <= 2:
             
             if self.current_skill_points <= 0:
-                return PopupMessage()
+                return PopupMessage(self, "No more skill points left. Press return to create your character!")
             
             self.current_skill_points -= 1
 
@@ -354,25 +403,26 @@ class AttributeSelection(EventHandler):
         elif 3 <= index <= 5:
 
             if self.current_skill_points >= self.skill_points:
-                return PopupMessage()
-
-            self.current_skill_points += 1
+                return PopupMessage(self, "You are at the max skill points available")
 
             if index == 3:
                 if self.hp_points <= 0:
-                    return PopupMessage()
+                    return PopupMessage(self, "You cannot go lower than this hp.")
                 self.hp_points -= 1
             elif index == 4:
                 if self.power_points <= 0:
-                    return PopupMessage()
+                    return PopupMessage(self, "You cannot go lower than this power.")
                 self.power_points -= 1
             elif index == 5:
                 if self.defense_points <= 0:
-                    return PopupMessage
+                    return PopupMessage(self, "You cannot go lower than this defense.")
                 self.defense_points -= 1
+
+            #increase current skill points after all possible errors
+            self.current_skill_points += 1
         
         else:
-            return PopupMessage() #TODO: IMPLEMENT THIS CORRECTLY
+            return PopupMessage(self, "Choose an appropriate action!")
             
         return None
 
