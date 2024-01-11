@@ -145,6 +145,6 @@ class MainMenu(input_handlers.BaseEventHandler):
                 return input_handlers.PopupMessage(self, f"Failed to load save:\n{exc}")
 
         elif event.sym == tcod.event.KeySym.n:
-            return input_handlers.MainGameEventHandler(new_game())
+            return input_handlers.AttributeSelection(new_game())
 
         return None
