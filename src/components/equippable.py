@@ -58,7 +58,7 @@ class Dagger(Equippable):
 
         self.maxheals = 2
 
-    def weapon_action(self) -> None:
+    def weapon_action(self) -> None:  #TODO: add possible handler change (ie fireball)
         healing_amount = self.player.fighter.heal(self.maxheals)
         if healing_amount > 0:
             self.engine.message_log.add_message(
