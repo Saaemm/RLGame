@@ -41,10 +41,6 @@ class Equipment(BaseComponent):
             bonus += self.armor.equippable.bonus_power
 
         return bonus
-    
-    # def item_is_equipment(self, item) -> bool:
-    #     '''Returns if something from inventory is an equippable item'''
-    #     return isinstance(item, EquippableItem)
 
     def item_is_equipped(self, item: EquippableItem) -> bool:
         '''Returns if item is equipped to the parent's equipment slots'''

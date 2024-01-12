@@ -333,7 +333,7 @@ class AttributeSelection(EventHandler):
 
         #TODO: make this prettier, do not have popup message when showing error...
         #TODO: game over/ game clear conditions, weapon abilities
-        #TODO: make autocreate an 
+        #TODO: make autocreate an option
         #TODO: maybe add mana???
 
         console.print(
