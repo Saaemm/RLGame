@@ -173,11 +173,13 @@ class MainGameEventHandler(EventHandler):
         elif key == tcod.event.KeySym.q:
             if player.equipment.weapon is None:
                 return actions.RaiseError(player, "You do not have a weapon equipped.")
-            equipment_action = player.equipment.weapon.equippable.equipment_action
-            if equipment_action is None:
-                return actions.RaiseError(player, "Your weapon does not have a unique action.")
-            else:
-                return player.equipment.weapon.equippable.equipment_action
+            try:
+                player.equipment.weapon.equippable.perform()
+            except exceptions.Impossible as exc:
+                self.engine.message_log.add_message(exc.args[0], color.impossible)
+                return None
+                    
+            action = WaitAction(self.engine)
 
         elif key == tcod.event.KeySym.SLASH:
             return LookHandler(self.engine)
