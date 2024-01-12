@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Optional, Tuple, TYPE_CHECKING
+from typing import Optional, Tuple, TYPE_CHECKING, Union
 
 import configs.color as color
-from entity import Actor
+from entity import Actor, EquippableItem
 import exceptions
 
 #prevent circular imports with engine in main
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 class Action:
-    def __init__(self, entity: Actor) -> None:
+    def __init__(self, entity: Union[Actor, EquippableItem] | None) -> None:
         super().__init__()
 
         #Entity is the entity doing the action
@@ -165,6 +165,10 @@ class MeleeAction(ActionWithDirection):
                 f"{attack_desc} but no damage is dealt", attack_color
             )
 
+        #account for thorns on enemy after attack if attack is valid
+        if target.equipment.armor is not None:
+            target.equipment.armor.equippable.armor_action(self.entity)
+
 class MovementAction(ActionWithDirection):
     def perform(self) -> None:
         dest_x, dest_y = self.dest_xy
@@ -190,3 +194,13 @@ class BumpAction(ActionWithDirection):
         
         else:
             return MovementAction(self.entity, self.dx, self.dy).perform()
+        
+
+class RaiseError(Action):
+    def __init__(self, entity: Actor, message: str) -> None:
+        super().__init__(entity)
+
+        self.message = message
+
+    def perform(self) -> None:
+        raise exceptions.Impossible(self.message)

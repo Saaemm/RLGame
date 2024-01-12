@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from components.inventory import Inventory
     from game_map import GameMap
     from components.level import Level
+    import actions
 
 T = TypeVar("T", bound="Entity")
 

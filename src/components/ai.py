@@ -71,7 +71,7 @@ class HostileEnemy(BaseAI):
 
             self.path = self.get_path_to(target.x, target.y) #gets new path
             
-        #in player's vision but not close enought to attack, move closer
+        #in player's vision but not close enough to attack, move closer
         if len(self.path) > 0:
             dest_x, dest_y = self.path.pop(0)  #moves by 1 closer to player
             return MovementAction(
