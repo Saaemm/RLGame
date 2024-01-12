@@ -1,3 +1,5 @@
+import copy
+
 from components.ai import HostileEnemy
 from components import consumable, equippable
 from components.equipment import Equipment
@@ -72,7 +74,7 @@ fireball_scroll = ConsumableItem(
 
 #equippables
 dagger = EquippableItem(
-    char="/", color=(0, 191, 255), name="Dagger", equippable=equippable.Dagger()
+    char="/", color=(0, 191, 255), name="Dagger", equippable=equippable.Dagger(),
 )
 
 sword = EquippableItem(

@@ -169,6 +169,15 @@ class MainGameEventHandler(EventHandler):
         elif key == tcod.event.KeySym.d:
             #inventory drop
             return InventoryDropHandler(self.engine)
+        
+        elif key == tcod.event.KeySym.q:
+            if player.equipment.weapon is None:
+                return actions.RaiseError(player, "You do not have a weapon equipped.")
+            equipment_action = player.equipment.weapon.equippable.equipment_action
+            if equipment_action is None:
+                return actions.RaiseError(player, "Your weapon does not have a unique action.")
+            else:
+                return player.equipment.weapon.equippable.equipment_action
 
         elif key == tcod.event.KeySym.SLASH:
             return LookHandler(self.engine)
@@ -300,7 +309,7 @@ class AskUserEventHandler(EventHandler):
         return MainGameEventHandler(self.engine)
     
 class AttributeSelection(EventHandler):
-    '''Allows the player to select attributes'''
+    '''Allows the player to select attributes with player creation'''
 
     def __init__(
             self, 
@@ -320,8 +329,11 @@ class AttributeSelection(EventHandler):
     
     def on_render(self, console: Console) -> None:
 
-        #TODO: make this prettier
-        
+        #TODO: make this prettier, do not have popup message when showing error...
+        #TODO: game over/ game clear conditions, weapon abilities
+        #TODO: make autocreate an 
+        #TODO: maybe add mana???
+
         console.print(
             console.width // 2,
             console.height // 2 - 4,
@@ -379,8 +391,8 @@ class AttributeSelection(EventHandler):
             if self.current_skill_points != 0:
                 return PopupMessage(self, "Spend all your points!")
             
-            player.fighter.hp = 5 + 5 * self.hp_points
-            player.fighter.max_hp = 5 + 5 * self.hp_points
+            player.fighter.max_hp = 5 + 5 * self.hp_points #need to set maxhp first before setting hp
+            player.fighter.hp = player.fighter.max_hp
             player.fighter.base_defense = self.defense_points
             player.fighter.base_power = self.power_points
             return MainGameEventHandler(self.engine)

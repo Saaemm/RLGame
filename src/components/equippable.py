@@ -5,13 +5,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from components.base_component import BaseComponent
+from components.consumable import ConfusionConsumable
 from equipment_types import EquipmentType
 
 if TYPE_CHECKING:
-    from entity import ConsumableItem
+    from entity import EquippableItem
+    import actions
+    from entity import Actor
 
 class Equippable(BaseComponent):
-    parent: ConsumableItem
+    parent: EquippableItem
 
     #TODO: add special action for each (possibly with cool down?), [need get_action, consume, activate]
     def __init__(
@@ -27,7 +30,10 @@ class Equippable(BaseComponent):
 
 class Dagger(Equippable):
     def __init__(self) -> None:
-        super().__init__(equipment_type=EquipmentType.WEAPON, bonus_power=2)
+        super().__init__(
+            equipment_type=EquipmentType.WEAPON, 
+            bonus_power=2, 
+        )
 
 class Sword(Equippable):
     def __init__(self) -> None:

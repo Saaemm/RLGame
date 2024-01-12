@@ -9,16 +9,21 @@ from configs.render_order import RenderOrder
 
 if TYPE_CHECKING:
     from entity import Actor
+    import actions
 
 class Fighter(BaseComponent):
 
     parent: Actor
 
-    def __init__(self, hp: int, base_defense: int, base_power: int) -> None:
+    def __init__(self, hp: int, base_defense: int, base_power: int, class_action: actions.Action = None) -> None:
         self.max_hp = hp
         self._hp = hp
         self.base_defense = base_defense
         self.base_power = base_power
+
+        self.class_action = class_action
+
+        #TODO: implement classes
 
     @property
     def hp(self) -> int:
