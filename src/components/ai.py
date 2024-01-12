@@ -56,7 +56,8 @@ class HostileEnemy(BaseAI):
         super().__init__(entity)
         self.path: List[Tuple[int, int]] = []
 
-
+    
+    #TODO: add stuff with weapon abilities if the hostile enemies have weapons
     def perform(self) -> None:
 
         target = self.engine.player
