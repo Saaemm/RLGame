@@ -165,6 +165,10 @@ class MeleeAction(ActionWithDirection):
                 f"{attack_desc} but no damage is dealt", attack_color
             )
 
+        #account for thorns on enemy after attack if attack is valid
+        if target.equipment.armor is not None:
+            target.equipment.armor.equippable.armor_action(self.entity)
+
 class MovementAction(ActionWithDirection):
     def perform(self) -> None:
         dest_x, dest_y = self.dest_xy

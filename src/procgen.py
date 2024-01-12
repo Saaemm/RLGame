@@ -25,6 +25,8 @@ max_monsters_by_floor = [
     (6, 5),
 ]
 
+#TODO: add boss to final level
+
 #Dictionaries of floor as key, List of (entity, weights) as values
 item_chances: Dict[int, List[Tuple[Entity, int]]] = {
     0: [(entity_factories.health_potion, 35)],
