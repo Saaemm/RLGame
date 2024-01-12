@@ -35,8 +35,8 @@ class Equippable(BaseComponent):
     def player(self) -> Actor:
         return self.parent.gamemap.engine.player
 
-    #TODO: implement cooldowns on abilities
-    #TODO: implement choosing weapons upon startup (maybe spend skillpoints)
+    #TODO: implement cool downs on abilities
+    #TODO: implement choosing weapons upon startup (maybe spend skill points)
 
     def weapon_action(self) -> None:
         if self.equipment_type == EquipmentType.WEAPON:
