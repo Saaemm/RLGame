@@ -86,6 +86,13 @@ class EventHandler(BaseEventHandler):
         if self.handle_action(action_or_state):
             #Valid action is performed
 
+            #reduce equipped for all entities cooldowns
+            for actor in self.engine.game_map.actors:
+                if actor.equipment.weapon is not None:
+                    actor.equipment.weapon.equippable.current_cooldown -= 1
+                if actor.equipment.armor is not None:
+                    actor.equipment.armor.equippable.current_cooldown -= 1
+
             #check for automatic switching to different game input states
             if not self.engine.player.is_alive:
                 #player killed some time during or after action
@@ -174,7 +181,9 @@ class MainGameEventHandler(EventHandler):
             if player.equipment.weapon is None:
                 return actions.RaiseError(player, "You do not have a weapon equipped.")
             try:
-                return player.equipment.weapon.equippable.weapon_action(player) #returns either none (action) or handler
+                handler = player.equipment.weapon.equippable.weapon_action(player) #handler either none (action) or handler
+                if handler is not None:
+                    return handler
             except exceptions.Impossible as exc:
                 self.engine.message_log.add_message(exc.args[0], color.impossible)
                 return None

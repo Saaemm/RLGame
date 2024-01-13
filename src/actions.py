@@ -10,6 +10,7 @@ import exceptions
 if TYPE_CHECKING:
     from engine import Engine
     from entity import Actor, Entity, ConsumableItem, EquippableItem
+    from components.equippable import Equippable
 
 
 class Action:
@@ -81,8 +82,7 @@ class FireballWeaponAction(Action):
     def __init__(
             self, 
             entity: Actor, 
-            radius: int = 1, 
-            damage: int = 0, 
+            item: Equippable,
             target_xy: Optional[Tuple[int, int]] = None
     ) -> None:
         super().__init__(entity)
@@ -90,8 +90,13 @@ class FireballWeaponAction(Action):
             target_xy = (entity.x, entity.y)
         self.target_xy = target_xy
 
-        self.damage = damage
-        self.radius = radius
+        self.item = item
+        #Safety check to check if item is valid
+        if not hasattr(item, "damage") or not hasattr(item, "radius"):
+            raise exceptions.Impossible("Item does not have fireball attack.")
+        
+        self.damage = item.damage
+        self.radius = item.radius
 
     @property
     def target_actor(self) -> Optional[Actor]:
@@ -100,6 +105,9 @@ class FireballWeaponAction(Action):
     
     def perform(self) -> None:
         '''Invokes the item's ability; action will be given to provide context'''
+        
+        self.item.current_cooldown = self.item.cooldown
+
         if not self.engine.game_map.visible[self.target_xy]:
             raise exceptions.Impossible("You must target somewhere visible.")
         
