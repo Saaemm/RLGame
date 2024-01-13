@@ -6,7 +6,7 @@ import pickle
 import traceback
 
 import copy
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import tcod
 from tcod.console import Console
@@ -58,21 +58,6 @@ def new_game() -> Engine:
     engine.message_log.add_message(
         "Hello fellow human, and welcome to [generic roguelike game]!", color.welcome_text
     )
-
-    #initial equipment
-    dagger = copy.deepcopy(entity_factories.dagger)
-    leather_armor = copy.deepcopy(entity_factories.leather_armor)
-
-    #put these in the inventory
-    dagger.parent = player.inventory
-    leather_armor.parent = player.inventory
-
-    #put dagger in the inventory and equip it
-    player.inventory.items.append(dagger)
-    player.equipment.toggle_equip(dagger, add_message=False)
-
-    player.inventory.items.append(leather_armor)
-    player.equipment.toggle_equip(leather_armor, add_message=False)
 
     return engine
 

@@ -28,6 +28,9 @@ class Engine:
         self.mouse_location = (0, 0)
         self.player = player
 
+        #10 lives to beat the game
+        self.lives_left = 9
+
     def handle_enemy_turns(self) -> None:
 
         #self.game_map.actors gets a generator of actors in map

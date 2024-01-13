@@ -10,10 +10,11 @@ import components.inventory
 from components.base_component import BaseComponent
 from entity import Actor
 from exceptions import Impossible
-from input_handlers import ActionOrHandler, SingleRangedAttackHandler, AreaRangedAttackHandler
 
 if TYPE_CHECKING:
     from entity import Actor, ConsumableItem
+    from input_handlers import ActionOrHandler, SingleRangedAttackHandler, AreaRangedAttackHandler
+
 
 
 class Consumable(BaseComponent):
