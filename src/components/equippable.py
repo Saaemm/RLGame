@@ -61,7 +61,7 @@ class Dagger(Equippable):
         self.radius = 3
         self.damage = 1
 
-    def weapon_action(self, entity: Actor) -> Optional[input_handlers.BaseEventHandler]:  #TODO: add possible handler change (ie fireball)
+    def weapon_action(self, entity: Actor) -> Optional[input_handlers.BaseEventHandler]:
         self.engine.message_log.add_message("Select a target location.", color.needs_target)
 
         return input_handlers.AreaRangedAttackHandler(
