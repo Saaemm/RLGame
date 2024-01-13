@@ -54,7 +54,7 @@ lightning_scroll = ConsumableItem(
     char='~',
     color=(255, 255, 0),
     name="Lightning Scroll", 
-    consumable=consumable.LightningDamageConsumale(damage=20, maximum_range=5),
+    consumable=consumable.LightningDamageConsumable(damage=20, maximum_range=5),
 )
 
 confusion_scroll = ConsumableItem(

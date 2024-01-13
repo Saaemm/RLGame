@@ -10,10 +10,11 @@ from entity import Actor
 from equipment_types import EquipmentType
 import exceptions
 import configs.color as color
+import input_handlers
+import actions
 
 if TYPE_CHECKING:
     from entity import EquippableItem
-    import actions
     from entity import Actor
 
 class Equippable(BaseComponent):
@@ -38,7 +39,8 @@ class Equippable(BaseComponent):
     #TODO: implement cool downs on abilities
     #TODO: implement choosing weapons upon startup (maybe spend skill points)
 
-    def weapon_action(self) -> None:
+    def weapon_action(self, entity: Actor) -> Optional[input_handlers.BaseEventHandler]:
+        #entity has the weapon and does the action
         if self.equipment_type == EquipmentType.WEAPON:
             raise exceptions.Impossible("This weapon does not have a unique action.")
         raise exceptions.Impossible("This object does not have a weapon action.")
@@ -56,17 +58,17 @@ class Dagger(Equippable):
             bonus_power=2, 
         )
 
-        self.maxheals = 2
+        self.radius = 3
+        self.damage = 1
 
-    def weapon_action(self) -> None:  #TODO: add possible handler change (ie fireball)
-        healing_amount = self.player.fighter.heal(self.maxheals)
-        if healing_amount > 0:
-            self.engine.message_log.add_message(
-                f"You used the dagger's healing ability, and recovered {healing_amount} HP!",
-                color.health_recovered
-            )
-        else:
-            raise exceptions.Impossible("You are already at max health!")
+    def weapon_action(self, entity: Actor) -> Optional[input_handlers.BaseEventHandler]:  #TODO: add possible handler change (ie fireball)
+        self.engine.message_log.add_message("Select a target location.", color.needs_target)
+
+        return input_handlers.AreaRangedAttackHandler(
+            engine=self.engine, 
+            radius=self.radius, 
+            callback=lambda xy: actions.FireballWeaponAction(entity, self.radius, self.damage, xy)
+        )
 
 class Sword(Equippable):
     '''Special healing ability that takes a turn'''
@@ -75,8 +77,8 @@ class Sword(Equippable):
 
         self.maxheals = 5
 
-    def weapon_action(self) -> None:
-        healing_amount = self.player.fighter.heal(self.maxheals)
+    def weapon_action(self, entity: Actor) -> Optional[input_handlers.BaseEventHandler]:
+        healing_amount = entity.fighter.heal(self.maxheals)
         if healing_amount > 0:
             self.engine.message_log.add_message(
                 f"You used the dagger's healing ability, and recovered {healing_amount} HP!",

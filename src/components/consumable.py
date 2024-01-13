@@ -56,7 +56,7 @@ class HealingConsumable(Consumable):
         else:
             raise Impossible(f"Your health is already full.")
         
-class LightningDamageConsumale(Consumable):
+class LightningDamageConsumable(Consumable):
 
     def __init__(self, damage: int, maximum_range: int) -> None:
         self.damage = damage

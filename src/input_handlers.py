@@ -174,7 +174,7 @@ class MainGameEventHandler(EventHandler):
             if player.equipment.weapon is None:
                 return actions.RaiseError(player, "You do not have a weapon equipped.")
             try:
-                player.equipment.weapon.equippable.weapon_action()
+                return player.equipment.weapon.equippable.weapon_action(player) #returns either none (action) or handler
             except exceptions.Impossible as exc:
                 self.engine.message_log.add_message(exc.args[0], color.impossible)
                 return None
