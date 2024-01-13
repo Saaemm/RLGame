@@ -58,6 +58,7 @@ class Dagger(Equippable):
             bonus_power=2, 
         )
 
+        #TODO: make these parameters in the entity factories side
         self.radius = 3
         self.damage = 1
 
