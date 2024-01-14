@@ -10,6 +10,7 @@ import exceptions
 if TYPE_CHECKING:
     from engine import Engine
     from entity import Actor, Entity, ConsumableItem, EquippableItem
+    from components.equippable import Equippable
 
 
 class Action:
@@ -73,6 +74,55 @@ class ConsumableItemAction(Action):
     def perform(self) -> None:
         '''Invokes the item's ability; action will be given to provide context'''
         self.item.consumable.activate(self)
+
+
+class FireballWeaponAction(Action):
+    '''A non-generalized action for a specific weapon attack'''
+    #TODO: can try to make this general
+    def __init__(
+            self, 
+            entity: Actor, 
+            item: Equippable,
+            target_xy: Optional[Tuple[int, int]] = None
+    ) -> None:
+        super().__init__(entity)
+        if target_xy is None:
+            target_xy = (entity.x, entity.y)
+        self.target_xy = target_xy
+
+        self.item = item
+        #Safety check to check if item is valid
+        if not hasattr(item, "damage") or not hasattr(item, "radius"):
+            raise exceptions.Impossible("Item does not have fireball attack.")
+        
+        self.damage = item.damage
+        self.radius = item.radius
+
+    @property
+    def target_actor(self) -> Optional[Actor]:
+        '''Return the actor at this action's destination'''
+        return self.engine.game_map.get_actor_at_location(*self.target_xy)
+    
+    def perform(self) -> None:
+        '''Invokes the item's ability; action will be given to provide context'''
+        
+        self.item.current_cooldown = self.item.cooldown
+
+        if not self.engine.game_map.visible[self.target_xy]:
+            raise exceptions.Impossible("You must target somewhere visible.")
+        
+        targets_hit = False
+        for actor in self.engine.game_map.actors:  #includes player and hidden entities, as long as target is visible
+            if actor.distance(*self.target_xy) <= self.radius:
+                targets_hit = True
+                self.engine.message_log.add_message(
+                    f"{actor.name} was engulfed in fire from a fireball, taking {self.damage} damage"
+                )
+                actor.fighter.take_damage(self.damage)  #dealt true damage
+        
+        if not targets_hit:
+            raise exceptions.Impossible("There are no targets within range.")
+
 
 class DropItem(ConsumableItemAction):
     def perform(self) -> None:

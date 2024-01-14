@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import copy
 
 from typing import Union, Optional, TYPE_CHECKING, Callable, Tuple
 from tcod.console import Console
@@ -15,6 +16,7 @@ import configs.color as color
 from engine import Engine
 import exceptions
 from entity import EquippableItem, ConsumableItem
+import entity_factories
 
 if TYPE_CHECKING:
     from engine import Engine
@@ -85,6 +87,13 @@ class EventHandler(BaseEventHandler):
         
         if self.handle_action(action_or_state):
             #Valid action is performed
+
+            #reduce equipped for all entities cooldowns
+            for actor in self.engine.game_map.actors:
+                if actor.equipment.weapon is not None:
+                    actor.equipment.weapon.equippable.current_cooldown -= 1
+                if actor.equipment.armor is not None:
+                    actor.equipment.armor.equippable.current_cooldown -= 1
 
             #check for automatic switching to different game input states
             if not self.engine.player.is_alive:
@@ -174,7 +183,9 @@ class MainGameEventHandler(EventHandler):
             if player.equipment.weapon is None:
                 return actions.RaiseError(player, "You do not have a weapon equipped.")
             try:
-                player.equipment.weapon.equippable.weapon_action()
+                handler = player.equipment.weapon.equippable.weapon_action(player) #handler either none (action) or handler
+                if handler is not None:
+                    return handler
             except exceptions.Impossible as exc:
                 self.engine.message_log.add_message(exc.args[0], color.impossible)
                 return None
@@ -320,6 +331,8 @@ class AttributeSelection(EventHandler):
             base_hp_pts: int = 0, 
             base_attack_pts: int = 0, 
             base_defense_pts: int = 0,
+            type_of_weapon: dict = None,
+            type_of_armor: dict = None,
         ):
         super().__init__(engine)
         self.skill_points = skill_points
@@ -328,6 +341,13 @@ class AttributeSelection(EventHandler):
         self.hp_points = base_hp_pts
         self.defense_points = base_defense_pts
         self.power_points = base_attack_pts
+
+        self.buy_weapon = None
+        if type_of_weapon is None:
+            self.type_of_weapon = {entity_factories.dagger: 2} #dictionary of weapon/cost
+        self.buy_armor = None
+        if type_of_armor is None:
+            self.type_of_armor = {entity_factories.leather_armor: 2} #dictionary of armor/cost
     
     def on_render(self, console: Console) -> None:
 
@@ -363,6 +383,7 @@ class AttributeSelection(EventHandler):
                 bg_blend=tcod.constants.BKGND_ALPH,  #check again later
             )
 
+        #TODO: make iterative list first without hardcoding
         for i, text in enumerate(
             [
                 "(a) increase hp by 5", 
@@ -370,7 +391,12 @@ class AttributeSelection(EventHandler):
                 "(c) increase defense by 1", 
                 "(d) decrease hp by 5", 
                 "(e) decrease power by 1", 
-                "(f) decrease defense by 1"
+                "(f) decrease defense by 1",
+                f"(g) buy {list(self.type_of_weapon.keys())[0].name} (spend {self.type_of_weapon[list(self.type_of_weapon.keys())[0]]} points)",
+                f"(h) buy {list(self.type_of_armor.keys())[0].name} (spend {self.type_of_armor[list(self.type_of_armor.keys())[0]]} points)",
+                f"(i) sell weapon (gain {0 if self.buy_weapon is None else self.type_of_weapon[self.buy_weapon]} points)",
+                f"(j) sell armor (gain {0 if self.buy_armor is None else self.type_of_armor[self.buy_armor]} points)"
+                # "(z) default skillpoint distribution",
             ]
         ):
             console.print(
@@ -397,7 +423,32 @@ class AttributeSelection(EventHandler):
             player.fighter.hp = player.fighter.max_hp
             player.fighter.base_defense = self.defense_points
             player.fighter.base_power = self.power_points
+
+            if self.buy_weapon is not None:
+                #initial equipment
+                weapon = copy.deepcopy(list(self.type_of_weapon.keys())[0])
+                #put these in the inventory
+                weapon.parent = player.inventory
+                #put weapon in the inventory and equip it
+                player.inventory.items.append(weapon)
+                player.equipment.toggle_equip(weapon, add_message=False)
+
+            if self.buy_armor is not None:
+                #initial equipment
+                armor = copy.deepcopy(list(self.type_of_armor.keys())[0])
+
+                #put these in the inventory
+                armor.parent = player.inventory
+
+                #put weapon in the inventory and equip it
+                player.inventory.items.append(armor)
+                player.equipment.toggle_equip(armor, add_message=False)
+
             return MainGameEventHandler(self.engine)
+        
+        if key in config.ESCAPE_KEYS:
+            from setup_game import MainMenu
+            return MainMenu()
 
         if 0 <= index <= 2:
             
@@ -434,6 +485,59 @@ class AttributeSelection(EventHandler):
 
             #increase current skill points after all possible errors
             self.current_skill_points += 1
+
+        elif 6 <= index <= 7:
+            #handles buying/selling weapons
+
+            if index == 6:
+                if self.buy_weapon is not None:
+                    return PopupMessage(self, "You must buy at most 1 weapon.")
+                buy_weapon = list(self.type_of_weapon.keys())[0]
+                price = self.type_of_weapon[buy_weapon]
+                if self.current_skill_points - price < 0:
+                    return PopupMessage(self, "No more skill points left. Press return to create your character!")
+                self.buy_weapon = buy_weapon
+                self.current_skill_points -= price
+
+            elif index == 7:
+                if self.buy_armor is not None:
+                    return PopupMessage(self, "You must buy at most 1 armor.")
+                buy_armor = list(self.type_of_armor.keys())[0]
+                price = self.type_of_armor[buy_armor]
+                if self.current_skill_points - price < 0:
+                    return PopupMessage(self, "No more skill points left. Press return to create your character!")
+                self.buy_armor = buy_armor
+                self.current_skill_points -= price
+
+        elif 8 <= index <= 9:
+            #handles selling weapons/armor
+
+            if index == 8:
+                if self.buy_weapon is None:
+                    return PopupMessage(self, "You cannot sell nothing!")
+                
+                price = self.type_of_weapon[self.buy_weapon]
+
+                if self.current_skill_points + price > self.skill_points:
+                    return PopupMessage(self, "You are at the max skill points available")
+                self.buy_weapon = None
+                self.current_skill_points += price
+
+            elif index == 9:
+                if self.buy_weapon is None:
+                    return PopupMessage(self, "You cannot sell nothing!")
+                
+                price = self.type_of_armor[self.buy_armor]
+
+                if self.current_skill_points + price > self.skill_points:
+                    return PopupMessage(self, "You are at the max skill points available")
+                self.buy_armor = None
+                self.current_skill_points += price
+
+
+        elif index == 26:
+            #TODO: implement default
+            pass
         
         else:
             return PopupMessage(self, "Choose an appropriate action!")

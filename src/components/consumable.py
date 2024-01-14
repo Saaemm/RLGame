@@ -10,10 +10,11 @@ import components.inventory
 from components.base_component import BaseComponent
 from entity import Actor
 from exceptions import Impossible
-from input_handlers import ActionOrHandler, SingleRangedAttackHandler, AreaRangedAttackHandler
 
 if TYPE_CHECKING:
     from entity import Actor, ConsumableItem
+    from input_handlers import ActionOrHandler, SingleRangedAttackHandler, AreaRangedAttackHandler
+
 
 
 class Consumable(BaseComponent):
@@ -56,7 +57,7 @@ class HealingConsumable(Consumable):
         else:
             raise Impossible(f"Your health is already full.")
         
-class LightningDamageConsumale(Consumable):
+class LightningDamageConsumable(Consumable):
 
     def __init__(self, damage: int, maximum_range: int) -> None:
         self.damage = damage
