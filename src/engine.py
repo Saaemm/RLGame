@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING
 from tcod.console import Console
 from tcod.map import compute_fov
 
+import configs.color as color
+
 import exceptions
 from interface.message_log import MessageLog
 import interface.render_functions as render_functions
@@ -58,6 +60,9 @@ class Engine:
 
         #prints message log at the bottom
         self.message_log.render(console=console, x=21, y=45, width=40, height=5)
+
+        #prints lives left
+        console.print(x=1, y=42, string=f"Lives left: {self.lives_left}", fg=color.bar_text)
 
         #prints player health
         render_functions.render_bar(
