@@ -98,7 +98,9 @@ class EventHandler(BaseEventHandler):
             #check for automatic switching to different game input states
             if not self.engine.player.is_alive:
                 #player killed some time during or after action
-                return GameOverEventHandler(self.engine)
+                if self.engine.lives_left == -1:
+                    return GameOverEventHandler(self.engine)
+                return AttributeSelection(self.engine)
             elif self.engine.player.level.requires_level_up:
                 #if player needs levelling up, then level up
                 return LevelUpHandler(self.engine)

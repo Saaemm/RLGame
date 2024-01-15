@@ -62,6 +62,7 @@ class Fighter(BaseComponent):
             #event handler changed in MainEventHandler
             death_message = "You died!"
             death_color = color.player_die
+            self.engine.lives_left -= 1
         else:
             death_message = f"{self.parent.name} is dead."
             death_color = color.enemy_die
