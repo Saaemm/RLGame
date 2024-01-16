@@ -207,6 +207,7 @@ def generate_dungeon(
         if len(rooms) == 0: 
             #the first room, where player starts
             player.place(*new_room.center, dungeon)
+            dungeon.entrance_location = new_room.center
         else: #all rooms after the first
             #dig a tunnel between this and the previous one
             #TODO: add more interesting tunnels/dungeon features

@@ -420,6 +420,16 @@ class AttributeSelection(EventHandler):
         if key in config.CONFIRM_KEYS:
             if self.current_skill_points != 0:
                 return PopupMessage(self, "Spend all your points!")
+
+            if not self.engine.player.is_alive:
+                player = entity_factories.player.spawn(self.engine.game_map, *(self.engine.game_map.entrance_location))
+                self.engine.player = player
+
+            # self.engine.player = copy.deepcopy(entity_factories.player)
+            # player = self.engine.player
+            # player.parent = self.engine.game_map
+            # self.engine.game_map.entities.add(player)
+            # player.place(*self.engine.game_map.entrance_location, self.engine.game_map)
             
             player.fighter.max_hp = 5 + 5 * self.hp_points #need to set maxhp first before setting hp
             player.fighter.hp = player.fighter.max_hp
