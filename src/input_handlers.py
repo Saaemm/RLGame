@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import copy
+import math
+import random
 
 from typing import Union, Optional, TYPE_CHECKING, Callable, Tuple
 from tcod.console import Console
@@ -100,7 +102,34 @@ class EventHandler(BaseEventHandler):
                 #player killed some time during or after action
                 if self.engine.lives_left == -1:
                     return GameOverEventHandler(self.engine)
-                return AttributeSelection(self.engine)
+                
+                #procedurally randomizes next character creation   TODO: maybe make this more organized, helper function
+                new_skill_points = self.engine.player.fighter.max_hp//10+10
+                random_points = min(max(6-self.engine.player.fighter.base_power, 0), new_skill_points)  #between 0 and new skill points
+                new_skill_points = max(new_skill_points-random_points, 0)
+
+                new_hp = math.floor(random.random() * random_points)
+                random_points = max(random_points-new_hp, 0)
+
+                new_power = math.floor(random.random() * random_points)
+                random_points = max(random_points-new_power, 0) #rest goes to defense_base_pts
+
+                new_weapons = None
+                new_armor = None
+                if self.engine.player.fighter.base_defense > self.engine.lives_left:
+                    new_weapons = {entity_factories.sword: 3}
+                    new_armor = {entity_factories.chain_mail: 3}
+
+                return AttributeSelection(
+                    self.engine, 
+                    skill_points=new_skill_points,
+                    base_hp_pts=new_hp,
+                    base_power_pts=new_power,
+                    base_defense_pts=random_points,
+                    type_of_weapon=new_weapons,
+                    type_of_armor=new_armor,
+                )
+            
             elif self.engine.player.level.requires_level_up:
                 #if player needs levelling up, then level up
                 return LevelUpHandler(self.engine)
@@ -330,8 +359,8 @@ class AttributeSelection(EventHandler):
             self, 
             engine: Engine, 
             skill_points: int = 10, 
-            base_hp_pts: int = 0, 
-            base_attack_pts: int = 0, 
+            base_hp_pts: int = 0,
+            base_power_pts: int = 0, 
             base_defense_pts: int = 0,
             type_of_weapon: dict = None,
             type_of_armor: dict = None,
@@ -340,9 +369,13 @@ class AttributeSelection(EventHandler):
         self.skill_points = skill_points
         self.current_skill_points = skill_points
 
-        self.hp_points = base_hp_pts
-        self.defense_points = base_defense_pts
-        self.power_points = base_attack_pts
+        self.base_hp_points = max(base_hp_pts, 0)
+        self.base_defense_points = max(base_defense_pts, 0)
+        self.base_power_points = max(base_power_pts, 0)
+
+        self.hp_points = self.base_hp_points
+        self.defense_points = self.base_defense_points
+        self.power_points = self.base_power_points
 
         self.buy_weapon = None
         if type_of_weapon is None:
@@ -365,6 +398,23 @@ class AttributeSelection(EventHandler):
             fg=color.menu_title,
             alignment=tcod.constants.CENTER,
         )
+
+        console.print(
+            console.width // 2,
+            console.height - 10,
+            "More health means more skill points to spend next generation.\nMore power means less randomly assigned skill points.\nMore defense means better equipment choice.",
+            fg=color.menu_title,
+            alignment=tcod.constants.CENTER,
+        )
+
+        console.print(
+            console.width // 2,
+            console.height - 6,
+            f"base hp points: {self.base_hp_points}, base power points: {self.base_power_points}, base defense points: {self.base_defense_points}",
+            fg=color.menu_title,
+            alignment=tcod.constants.CENTER,
+        )
+
         console.print(
             console.width // 2,
             console.height - 4,
@@ -424,6 +474,7 @@ class AttributeSelection(EventHandler):
             if not self.engine.player.is_alive:
                 player = entity_factories.player.spawn(self.engine.game_map, *(self.engine.game_map.entrance_location))
                 self.engine.player = player
+                self.engine.update_fov()
 
             # self.engine.player = copy.deepcopy(entity_factories.player)
             # player = self.engine.player
@@ -483,15 +534,15 @@ class AttributeSelection(EventHandler):
                 return PopupMessage(self, "You are at the max skill points available")
 
             if index == 3:
-                if self.hp_points <= 0:
+                if self.hp_points <= self.base_hp_points:
                     return PopupMessage(self, "You cannot go lower than this hp.")
                 self.hp_points -= 1
             elif index == 4:
-                if self.power_points <= 0:
+                if self.power_points <= self.base_power_points:
                     return PopupMessage(self, "You cannot go lower than this power.")
                 self.power_points -= 1
             elif index == 5:
-                if self.defense_points <= 0:
+                if self.defense_points <= self.base_power_points:
                     return PopupMessage(self, "You cannot go lower than this defense.")
                 self.defense_points -= 1
 
