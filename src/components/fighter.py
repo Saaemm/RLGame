@@ -18,7 +18,7 @@ class Fighter(BaseComponent):
     def __init__(self, hp: int, base_defense: int, base_power: int, class_action: actions.Action = None) -> None:
         self.max_hp = hp
         self._hp = hp
-        self.base_defense = base_defense
+        self.base_defense = base_defense  #TODO: FIX DEFENSE MECHANICS
         self.base_power = base_power
 
         self.class_action = class_action
@@ -60,9 +60,9 @@ class Fighter(BaseComponent):
     def die(self) -> None:
         if self.engine.player is self.parent:   #player death
             #event handler changed in MainEventHandler
-            death_message = "You died!"
-            death_color = color.player_die
             self.engine.lives_left -= 1
+            death_message = f"You died! You have {self.engine.lives_left+1} lives left."
+            death_color = color.player_die
         else:
             death_message = f"{self.parent.name} is dead."
             death_color = color.enemy_die
